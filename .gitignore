@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/dvec
+dvec.so
+dvec.dylib
+dvec.dll
+dvec.a
+dvec.lib
+dvec-test-*
+*.exe
+*.o
+*.obj
+*.lst
+*.a
