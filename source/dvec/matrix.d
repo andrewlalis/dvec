@@ -3,26 +3,79 @@ module dvec.matrix;
 import std.traits : isNumeric, isFloatingPoint;
 import dvec.vector;
 
+/** 
+ * Generic struct that represents a matrix with `rowCount` rows and `colCount`
+ * columns, holding elements of type `T`. A matrix must be at least 1x1.
+ */
 struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 && colCount > 0) {
+    public static const size_t WIDTH = colCount;
+    public static const size_t HEIGHT = rowCount;
+
+    /** 
+     * The internal static array storing the elements in row-major form.
+     */
     public T[rowCount * colCount] data;
 
+    /** 
+     * Constructs a matrix from the given elements.
+     * Params:
+     *   elements = The elements to place in the matrix. Should be in row-major
+     *              form.
+     */
     public this(T[rowCount * colCount] elements) {
         data[0 .. $] = elements[0 .. $];
     }
 
+    /** 
+     * Constructs a matrix from the given elements.
+     * Params:
+     *   elements = The elements to place in the matrix. Should be in row-major
+     *              form.
+     */
     public this(T[] elements...) {
         data[0 .. $] = elements[0 .. $];
     }
 
-    public this(Mat!(T, rowCount, colCount) other) {
-        static foreach (i; 0 .. data.length) data[i] = other.data[i];
+    /** 
+     * Constructs a matrix from the given 2-dimensional array.
+     * Params:
+     *   elements = The elements to place in the matrix.
+     */
+    public this(T[colCount][rowCount] elements) {
+        static foreach (i; 0 .. rowCount) {
+            static foreach (j; 0 .. colCount) {
+                this[i, j] = elements[i][j];
+            }
+        }
     }
 
+    /** 
+     * Constructs a matrix as a copy of another.
+     * Params:
+     *   other = The matrix to copy.
+     */
+    public this(Mat!(T, rowCount, colCount) other) {
+        data[0 .. data.length] = other.data[0 .. data.length];
+    }
+
+    /** 
+     * Constructs a matrix with all elements initialized to the given value.
+     * Params:
+     *   value = The value to set all elements to.
+     */
     public this(T value) {
         static foreach (i; 0 .. data.length) data[i] = value;
     }
 
-    private size_t convertToIndex(size_t i, size_t j) {
+    /** 
+     * Helper method to convert a 2-dimensional `[i, j]` index into a
+     * 1-dimensional `[i]` index.
+     * Params:
+     *   i = The row number.
+     *   j = The column number.
+     * Returns: A 1-dimensional index.
+     */
+    private static size_t convertToIndex(size_t i, size_t j) {
         return colCount * i + j;
     }
 
@@ -173,6 +226,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return sub;
     }
 
+    // Special methods for square matrices.
     static if (rowCount == colCount) {
         alias N = rowCount;
 
@@ -228,6 +282,51 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             m.div(det());
             return m;
         }
+
+        // Special case for 3x3 floating-point matrices: linear transformations
+        static if (N == 3 && isFloatingPoint!T) {
+            public void rotate(T theta) {
+                import std.math : cos, sin;
+                this = mul(Mat!(T, N, N)(
+                    cos(theta), -sin(theta), 0,
+                    sin(theta), cos(theta), 0,
+                    0, 0, 1
+                ));
+            }
+
+            public void translate(T dx, T dy) {
+                this = mul(Mat!(T, N, N)(
+                    1, 0, dx,
+                    0, 1, dy,
+                    0, 0, 1
+                ));
+            }
+
+            public void scale(T sx, T sy) {
+                this = mul(Mat!(T, N, N)(
+                    sx, 0,  0,
+                    0,  sy, 0,
+                    0,  0,  1
+                ));
+            }
+
+            public void scale(T s) {
+                scale(s, s);
+            }
+
+            public void shear(T sx, T sy) {
+                this = mul(Mat!(T, N, N)(
+                    1,  sx, 0,
+                    sy, 1,  0,
+                    0,  0,  1
+                ));
+            }
+
+            public Vec!(T, 2) map(Vec!(T, 2) v) {
+                Vec!(T, 3) v1 = this.mul(Vec!(T, 3)(v[0], v[1], 1));
+                return Vec!(T, 2)(v1[0], v1[1]);
+            }
+        }
     }
 }
 
@@ -259,6 +358,9 @@ unittest {
     auto m5 = m4.mul(Mat2d([0, 1, 0, 0]));
     assert(m5.data == [0, 1, 0, 3]);
 
+    assert(Mat2d([[1, 2], [3, 4]]).data == [1, 2, 3, 4]);
+    assert(Mat!(double, 2, 3)([[1, 2, 3], [-1, -2, -3]]).data == [1, 2, 3, -1, -2, -3]);
+
     auto m6 = Mat2d.identity();
     assert(m6.data == [1, 0, 0, 1]);
     auto m7 = Mat3d.identity();
@@ -267,6 +369,21 @@ unittest {
     auto m8 = Mat!(double, 2, 3)([1, -1, 2, 0, -3, 1]);
     Vec3d v1 = Vec3d(2, 1, 0);
     assert(m8.mul(v1).data == [1, -3]);
+
+    Vec3f p = Vec3f(0, 0, 1);
+    Mat3f tx = Mat3f([
+        [1, 0, 42],
+        [0, 1, 64],
+        [0, 0, 1]
+    ]);
+    auto transformed = tx.mul(p);
+    assert(transformed.data == [42, 64, 1]);
+
+    auto p2 = Vec2f(0, 0);
+    auto tx2 = Mat3f.identity();
+    tx2.translate(42, 64);
+    auto transformed2 = tx2.map(p2);
+    assert(transformed2.data == [42, 64]);
 
     auto m9 = Mat!(double, 3, 4)([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     auto m10 = m9.subMatrix([2], [1]);

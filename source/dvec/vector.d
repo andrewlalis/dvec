@@ -65,37 +65,81 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return v;
     }
 
-    public T opIndex(size_t i) {
+    /** 
+     * Gets a copy of this vector.
+     * Returns: A copy of this vector.
+     */
+    public Vec!(T, size) copy() const {
+        return Vec!(T, size)(this);
+    }
+
+    /** 
+     * Gets the element at a specified index.
+     * Params:
+     *   i = The index of the element.
+     * Returns: The element at the specified index.
+     */
+    public T opIndex(size_t i) const {
         return data[i];
     }
 
+    /** 
+     * Inserts an element at the specified index.
+     * Params:
+     *   value = The value to assign.
+     *   i = The index of the element.
+     */
     public void opIndexAssign(T value, size_t i) {
         data[i] = value;
     }
 
+    /** 
+     * Adds the given vector to this one.
+     * Params:
+     *   other = The vector to add to this one.
+     */
     public void add(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += other[i];
     }
 
+    /** 
+     * Subtracts the given vector from this one.
+     * Params:
+     *   other = The vector to subtract from this one.
+     */
     public void sub(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= other[i];
     }
 
     alias subtract = sub;
 
+    /** 
+     * Multiplies this vector by a factor, element-wise.
+     * Params:
+     *   factor = The factor to multiply by.
+     */
     public void mul(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= factor;
     }
 
     alias multiply = mul;
 
+    /** 
+     * Divides this vector by a factor, element-wise.
+     * Params:
+     *   factor = The factor to divide by.
+     */
     public void div(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= factor;
     }
 
     alias divide = div;
 
-    public double mag() {
+    /** 
+     * Determines the magnitude of this vector.
+     * Returns: The magnitude of this vector.
+     */
+    public double mag() const {
         import std.math : sqrt;
         double sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * data[i];
@@ -106,13 +150,79 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     alias length = mag;
     alias len = mag;
 
-    public T dot(Vec!(T, size) other) {
+    /** 
+     * Determines the [dot product](https://en.wikipedia.org/wiki/Dot_product)
+     * of this vector and another vector.
+     * Params:
+     *   other = The other vector.
+     * Returns: The dot product of the vectors.
+     */
+    public T dot(Vec!(T, size) other) const {
         T sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * other[i];
         return sum;
     }
 
     alias dotProduct = dot;
+
+    public Vec!(T, size) opBinary(string op : "+", V)(Vec!(V, size) other) const if (isNumeric!V) {
+        auto result = copy();
+        result.add(other);
+        return result;
+    }
+
+    public ref Vec!(T, size) opOpAssign(string op : "+", V)(Vec!(V, size) other) if (isNumeric!V) {
+        this.add(other);
+        return this;
+    }
+
+    public Vec!(T, size) opBinary(string op : "-", V)(Vec!(V, size) other) const if (isNumeric!V) {
+        auto result = copy();
+        result.sub(other);
+        return result;
+    }
+
+    public ref Vec!(T, size) opOpAssign(string op : "-", V)(Vec!(V, size) other) if (isNumeric!V) {
+        this.sub(other);
+        return this;
+    }
+
+    public Vec!(T, size) opBinary(string op : "*", V)(V factor) const if (isNumeric!V) {
+        auto result = copy();
+        result.mul(factor);
+        return result;
+    }
+
+    public ref Vec!(T, size) opOpAssign(string op : "*", V)(V factor) if (isNumeric!V) {
+        this.mul(factor);
+        return this;
+    }
+
+    public Vec!(T, size) opBinary(string op : "/", V)(V factor) const if (isNumeric!V) {
+        auto result = copy();
+        result.div(factor);
+        return result;
+    }
+
+    public ref Vec!(T, size) opOpAssign(string op : "/", V)(V factor) if (isNumeric!V) {
+        this.div(factor);
+        return this;
+    }
+
+    /** 
+     * Compares this vector to another, based on their magnitudes.
+     * Params:
+     *   other = The vector to compare to.
+     * Returns: 0 if the vectors have equal magnituded, 1 if this vector's
+     * magnitude is bigger, and -1 if the other's is bigger.
+     */
+    public int opCmp(Vec!(T, size) other) const {
+        double a = this.mag();
+        double b = other.mag();
+        if (a == b) return 0;
+        if (a < b) return -1;
+        return 1;
+    }
 
     // TODO: Make this @nogc compatible!
     public string toString() const {
@@ -128,6 +238,10 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     }
 
     static if (isFloatingPoint!T) {
+        /** 
+         * [Normalizes](https://en.wikipedia.org/wiki/Unit_vector) this vector,
+         * such that it will have a magnitude of 1.
+         */
         public void norm() {
             const double mag = mag();
             static foreach (i; 0 .. size) {
@@ -139,6 +253,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     }
 
     static if (isFloatingPoint!T && size == 2) {
+        /** 
+         * Converts this 2-dimensional vector from [Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system)
+         * to [Polar](https://en.wikipedia.org/wiki/Polar_coordinate_system)
+         * coordinates. It is assumed that the first element is the **x**
+         * coordinate, and the second element is the **y** coordinate. The
+         * first element becomes the **radius** and the second becomes the
+         * angle **theta**.
+         */
         public void toPolar() {
             import std.math : atan2;
             T radius = mag();
@@ -147,6 +269,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
             data[1] = angle;
         }
 
+        /** 
+         * Converts this 2-dimensional vector from [Polar](https://en.wikipedia.org/wiki/Polar_coordinate_system)
+         * to [Cartesian](https://en.wikipedia.org/wiki/Cartesian_coordinate_system)
+         * coordinates. It is assumed that the first element is the **radius**
+         * and the second element is the angle **theta**. The first element
+         * becomes the **x** coordinate, and the second becomes the **y**
+         * coordinate.
+         */
         public void toCartesian() {
             import std.math : cos, sin;
             T x = data[0] * cos(data[1]);
@@ -206,6 +336,18 @@ unittest {
     assert(Vec2f(3, 4).mag == 5.0f);
     assert(Vec2d.empty.mag == 0);
     assert(Vec2d(1.0, 1.0).dot(Vec2d(1.0, 1.0)) == 2.0);
+
+    // Operator overloads.
+    assert(Vec2d(1, 1) + Vec2d(2, 1) == Vec2d(3, 2));
+    assert(Vec2d(4, 4) - Vec2d(0, 3) == Vec2d(4, 1));
+    v1 = Vec2d(1, 1);
+    v1 += Vec2d(1, 1);
+    v1 *= -2;
+    assert(v1 == Vec2d(-4, -4));
+    v1 /= -4;
+    assert(v1 == Vec2d(1, 1));
+    assert(Vec2d(0, 0) < Vec2d(1, 1));
+    assert(Vec2d(42, 1) > Vec2d(0, 0));
 
     // Test floating-point specific methods.
     auto v6 = Vec2f(3, 3);
