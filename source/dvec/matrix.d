@@ -3,8 +3,24 @@ module dvec.matrix;
 import std.traits : isNumeric, isFloatingPoint;
 import dvec.vector;
 
-struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 && colCount > 1) {
+struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 && colCount > 0) {
     public T[rowCount * colCount] data;
+
+    public this(T[rowCount * colCount] elements) {
+        data[0 .. $] = elements[0 .. $];
+    }
+
+    public this(T[] elements...) {
+        data[0 .. $] = elements[0 .. $];
+    }
+
+    public this(Mat!(T, rowCount, colCount) other) {
+        static foreach (i; 0 .. data.length) data[i] = other.data[i];
+    }
+
+    public this(T value) {
+        static foreach (i; 0 .. data.length) data[i] = value;
+    }
 
     private size_t convertToIndex(size_t i, size_t j) {
         return colCount * i + j;
@@ -68,6 +84,12 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 
         return m;
     }
 
+    /** 
+     * Computes the matrix multiplication of `this * other`.
+     * Params:
+     *   other = The matrix to multiply with this one.
+     * Returns: The resultant matrix.
+     */
     public Mat!(T, rowCount, otherColCount) mul(T, size_t otherRowCount, size_t otherColCount)
         (Mat!(T, otherRowCount, otherColCount) other) {
         Mat!(T, rowCount, otherColCount) m;
@@ -84,6 +106,12 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 
         return m;
     }
 
+    /** 
+     * Multiplies a vector against this matrix.
+     * Params:
+     *   vector = The vector to multiply.
+     * Returns: The resultant transformed vector.
+     */
     public Vec!(T, rowCount) mul(Vec!(T, colCount) vector) {
         Vec!(T, rowCount) result;
         T sum;
@@ -115,7 +143,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 
         setRow(rowI, row);
     }
 
-    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols) {
+    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols)
+        if (rowCount - n > 0 && colCount - m > 0) {
         // TODO: Improve efficiency with static stuff.
         Mat!(T, rowCount - n, colCount - m) sub;
         size_t subIdx = 0;
@@ -147,10 +176,10 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 
     static if (rowCount == colCount) {
         alias N = rowCount;
 
-        public static Mat!(T, rowCount, colCount) identity() {
-            Mat!(T, rowCount, colCount) m;
-            static foreach (i; 0 .. rowCount) {
-                static foreach (j; 0 .. colCount) {
+        public static Mat!(T, N, N) identity() {
+            Mat!(T, N, N) m;
+            static foreach (i; 0 .. N) {
+                static foreach (j; 0 .. N) {
                     m[i, j] = i == j ? 1 : 0;
                 }
             }
@@ -158,8 +187,46 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 
         }
 
         public T det() {
-            // TODO: Implement determinant using Laplace expansion?
-            return 0;
+            static if (N == 1) {
+                return data[0];
+            } else static if (N == 2) {
+                return data[0] * data[3] - data[1] * data[2];
+            } else {
+                // Laplace expansion, taking i = 0.
+                T sum = 0;
+                static foreach (j; 0 .. N) {
+                    sum += (j % 2 == 0 ? 1 : -1) * this[0, j] * this.subMatrix([0], [j]).det();
+                }
+                return sum;
+            }
+        }
+
+        public bool invertible() {
+            return det() != 0;
+        }
+
+        public Mat!(T, N, N) cofactor() {
+            static if (N == 1) {
+                return Mat!(T, N, N)(data[0]);
+            } else {
+                Mat!(T, N, N) c;
+                static foreach (i; 0 .. N) {
+                    static foreach (j; 0 .. N) {
+                        c[i, j] = ((i + j) % 2 == 0 ? 1 : -1) * this.subMatrix([i], [j]).det();
+                    }
+                }
+                return c;
+            }
+        }
+
+        public Mat!(T, N, N) adjugate() {
+            return cofactor().transpose();
+        }
+
+        public Mat!(T, N, N) inv() {
+            auto m = adjugate();
+            m.div(det());
+            return m;
         }
     }
 }
@@ -204,4 +271,14 @@ unittest {
     auto m9 = Mat!(double, 3, 4)([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     auto m10 = m9.subMatrix([2], [1]);
     assert(m10.data == [1, 3, 4, 5, 7, 8]);
+
+    assert(Mat2d([3, 7, 1, -4]).det == -19);
+    assert(Mat2d([1, 2, 3, 4]).det == -2);
+    assert(Mat3d([1, 2, 3, 4, 5, 6, 7, 8, 9]).det == 0);
+
+    assert(Mat2d.identity().inv() == Mat2d.identity());
+    assert(Mat3f.identity().inv() == Mat3f.identity());
+    assert(Mat2d(4, 7, 2, 6).inv() == Mat2d(0.6, -0.7, -0.2, 0.4));
+    assert(Mat2d(-3, 1, 5, -2).inv() == Mat2d(-2, -1, -5, -3));
+    assert(Mat3d(1, 3, 3, 1, 4, 3, 1, 3, 4).inv() == Mat3d(7, -3, -3, -1, 1, 0, -1, 0, 1));
 }

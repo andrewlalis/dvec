@@ -4,29 +4,61 @@ import std.traits : isNumeric, isFloatingPoint;
 
 /** 
  * Generic struct that represents a vector holding `size` elements of type `T`.
+ * A vector must contain at least 1 element, and has no upper-bound on the size
+ * beyond restrictions imposed by the system.
  */
-struct Vec(T, size_t size) if (isNumeric!T && size > 1) {
+struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
+    /** 
+     * A static contstant that can be used to get the size of the vector.
+     */
     public static const size_t SIZE = size;
 
+    /** 
+     * The internal static array storing the elements of this vector.
+     */
     public T[size] data;
 
+    /** 
+     * Constructs a vector from an array of elements.
+     * Params:
+     *   elements = The elements to put in the vector.
+     */
     public this(T[size] elements) {
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
 
+    /** 
+     * Constructs a vector from a variadic list of elements.
+     * Params:
+     *   elements = The elements to put in the vector.
+     */
     public this(T[] elements...) {
         if (elements.length != size) assert(false, "Invalid number of elements provided to Vec constructor.");
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
 
+    /** 
+     * Constructs a vector where all elements have the given value.
+     * Params:
+     *   value = The value to assign to all elements in the vector.
+     */
     public this(T value) {
         static foreach (i; 0 .. size) data[i] = value;
     }
 
+    /** 
+     * Constructs a vector as a copy of the other.
+     * Params:
+     *   other = The vector to copy.
+     */
     public this(Vec!(T, size) other) {
         this(other.data);
     }
 
+    /** 
+     * Constructs a vector containing all 0's.
+     * Returns: An vector containing all 0's.
+     */
     public static Vec!(T, size) empty() {
         Vec!(T, size) v;
         static foreach (i; 0 .. size) v[i] = 0;
