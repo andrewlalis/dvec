@@ -2,7 +2,6 @@ module dvec.matrix;
 
 import std.traits : isNumeric, isFloatingPoint;
 import dvec.vector;
-import std.stdio;
 
 struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 1 && colCount > 1) {
     public T[rowCount * colCount] data;
