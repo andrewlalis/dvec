@@ -8,7 +8,7 @@ import std.traits : isNumeric, isFloatingPoint;
 struct Vec(T, size_t size) if (isNumeric!T && size > 1) {
     public static const size_t SIZE = size;
 
-    private T[size] data;
+    public T[size] data;
 
     public this(T[size] elements) {
         static foreach (i; 0 .. size) data[i] = elements[i];
