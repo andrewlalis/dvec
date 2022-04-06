@@ -79,25 +79,58 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return colCount * i + j;
     }
 
-    public T opIndex(size_t i, size_t j) {
+    /** 
+     * Gets the value at a specified location in the matrix. For example,
+     * with a `Mat!(float, 2, 2) m`, we can say `float v = m[0, 1];`
+     * Params:
+     *   i = The row number, starting from 0.
+     *   j = The column number, starting from 0.
+     * Returns: The value at the specified location.
+     */
+    public T opIndex(size_t i, size_t j) const {
         return data[convertToIndex(i, j)];
     }
 
+    /** 
+     * Sets the value at a specified location in the matrix.
+     * Params:
+     *   value = The value to assign.
+     *   i = The row number, starting from 0.
+     *   j = The column number, starting from 0.
+     */
     public void opIndexAssign(T value, size_t i, size_t j) {
         data[convertToIndex(i, j)] = value;
     }
 
+    /** 
+     * Gets a specified row as a vector.
+     * Params:
+     *   row = The row number, starting from 0.
+     * Returns: The row.
+     */
     public Vec!(T, colCount) getRow(size_t row) {
         size_t idx = convertToIndex(row, 0);
         return Vec!(T, colCount)(data[idx .. idx + colCount]);
     }
 
+    /** 
+     * Sets a specified row to the given vector of elements.
+     * Params:
+     *   row = The row number, starting from 0.
+     *   vector = The elements to set in the row.
+     */
     public void setRow(size_t row, Vec!(T, colCount) vector) {
         size_t idx = convertToIndex(row, 0);
         data[idx .. idx + colCount] = vector.data;
     }
 
-    public Vec!(T, rowCount) getCol(size_t col) {
+    /** 
+     * Gets a specified column as a vector.
+     * Params:
+     *   col = The column number, starting from 0.
+     * Returns: The column.
+     */
+    public Vec!(T, rowCount) getCol(size_t col) const {
         Vec!(T, rowCount) v;
         static foreach (i; 0 .. rowCount) {
             v[i] = this[i, col];
@@ -105,29 +138,60 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return v;
     }
 
+    /** 
+     * Sets a specified column to the given vector of elements.
+     * Params:
+     *   col = The column number, starting from 0.
+     *   vector = The elements to set in the column.
+     */
     public void setCol(size_t col, Vec!(T, rowCount) vector) {
         static foreach (i; 0 .. rowCount) {
             this[i, col] = vector[i];
         }
     }
 
+    /** 
+     * Adds a given matrix to this one.
+     * Params:
+     *   other = The other matrix to add to this one.
+     */
     public void add(Mat!(T, rowCount, colCount) other) {
         static foreach (i; 0 .. data.length) data[i] += other.data[i];
     }
 
+    /** 
+     * Subtracts a given matrix from this one.
+     * Params:
+     *   other = The other matrix to subtract from this one.
+     */
     public void sub(Mat!(T, rowCount, colCount) other) {
         static foreach (i; 0 .. data.length) data[i] -= other.data[i];
     }
 
+    /** 
+     * Multiplies this matrix by a factor.
+     * Params:
+     *   factor = The factor to muliply by.
+     */
     public void mul(T factor) {
         static foreach (i; 0 .. data.length) data[i] *= factor;
     }
 
+    /** 
+     * Divides this matrix by a factor.
+     * Params:
+     *   factor = The factor to divide by.
+     */
     public void div(T factor) {
         static foreach (i; 0 .. data.length) data[i] /= factor;
     }
 
-    public Mat!(T, colCount, rowCount) transpose() {
+    /** 
+     * Gets the [transpose](https://en.wikipedia.org/wiki/Transpose) of this
+     * matrix.
+     * Returns: The transposed version of this matrix.
+     */
+    public Mat!(T, colCount, rowCount) transpose() const {
         Mat!(T, colCount, rowCount) m;
         static foreach (i; 0 .. rowCount) {
             static foreach (j; 0 .. colCount) {
@@ -138,13 +202,14 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
     }
 
     /** 
-     * Computes the matrix multiplication of `this * other`.
+     * Computes the [matrix multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication)
+     * of `this * other`.
      * Params:
      *   other = The matrix to multiply with this one.
      * Returns: The resultant matrix.
      */
     public Mat!(T, rowCount, otherColCount) mul(T, size_t otherRowCount, size_t otherColCount)
-        (Mat!(T, otherRowCount, otherColCount) other) {
+        (Mat!(T, otherRowCount, otherColCount) other) const {
         Mat!(T, rowCount, otherColCount) m;
         T sum;
         static foreach (i; 0 .. rowCount) {
@@ -165,7 +230,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   vector = The vector to multiply.
      * Returns: The resultant transformed vector.
      */
-    public Vec!(T, rowCount) mul(Vec!(T, colCount) vector) {
+    public Vec!(T, rowCount) mul(Vec!(T, colCount) vector) const {
         Vec!(T, rowCount) result;
         T sum;
         static foreach (i; 0 .. rowCount) {
@@ -178,11 +243,24 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return result;
     }
 
+    /** 
+     * Switches two rows in this matrix.
+     * Params:
+     *   rowI = A row to swap, starting from 0.
+     *   rowJ = A row to swap, starting from 0.
+     */
     public void rowSwitch(size_t rowI, size_t rowJ) {
         auto r = getRow(rowI);
+        setRow(rowI, getRow(rowJ));
         setRow(rowJ, r);
     }
 
+    /** 
+     * Multiplies a row by a factor.
+     * Params:
+     *   row = The row number, starting from 0.
+     *   factor = The factor to multiply by.
+     */
     public void rowMultiply(size_t row, T factor) {
         size_t idx = convertToIndex(row, 0);
         static foreach (i; 0 .. colCount) {
@@ -190,13 +268,27 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         }
     }
 
+    /** 
+     * Adds a row, multiplied by a factor, to another row.
+     * Params:
+     *   rowI = The row number to add to.
+     *   factor = The factor to multiply `rowJ` by.
+     *   rowJ = The row to add to `rowI`.
+     */
     public void rowAdd(size_t rowI, T factor, size_t rowJ) {
         auto row = getRow(rowJ);
         row.mul(factor);
         setRow(rowI, row);
     }
 
-    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols)
+    /** 
+     * Gets a submatrix of this matrix, with the given rows and columns removed.
+     * Params:
+     *   rows = The set of rows to remove.
+     *   cols = The set of columns to remove.
+     * Returns: A matrix with the given rows and columns removed.
+     */
+    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols) const
         if (rowCount - n > 0 && colCount - m > 0) {
         // TODO: Improve efficiency with static stuff.
         Mat!(T, rowCount - n, colCount - m) sub;
@@ -226,10 +318,45 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return sub;
     }
 
+    /** 
+     * Converts this matrix to a string.
+     * Returns: A string representation of the matrix.
+     */
+    public string toString() const {
+        import std.conv : to;
+        import std.algorithm : max;
+        import std.array : appender, replicate;
+        string[data.length] values;
+        size_t[colCount] columnWidths;
+        foreach (i; 0 .. data.length) {
+            values[i] = data[i].to!string;
+            size_t colIdx = i % colCount;
+            columnWidths[colIdx] = max(columnWidths[colIdx], values[i].length + 1);
+        }
+        auto s = appender!string;
+        foreach (r; 0 .. rowCount) {
+            s ~= "| ";
+            foreach (c; 0 .. colCount) {
+                size_t idx = convertToIndex(r, c);
+                size_t padAmount = columnWidths[c] - values[idx].length;
+                string padding = replicate(" ", padAmount);
+                s ~= padding ~ values[idx];
+                if (c < colCount - 1) s ~= ", ";
+            }
+            s ~= " |";
+            if (r < rowCount - 1) s ~= "\n";
+        }
+        return s[];
+    }
+
     // Special methods for square matrices.
     static if (rowCount == colCount) {
         alias N = rowCount;
 
+        /** 
+         * Gets an [identity matrix](https://en.wikipedia.org/wiki/Identity_matrix).
+         * Returns: An identity matrix.
+         */
         public static Mat!(T, N, N) identity() {
             Mat!(T, N, N) m;
             static foreach (i; 0 .. N) {
@@ -240,7 +367,12 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             return m;
         }
 
-        public T det() {
+        /** 
+         * Gets the [determinant](https://en.wikipedia.org/wiki/Determinant)
+         * of this matrix.
+         * Returns: The determinant of this matrix.
+         */
+        public T det() const {
             static if (N == 1) {
                 return data[0];
             } else static if (N == 2) {
@@ -255,11 +387,20 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             }
         }
 
-        public bool invertible() {
+        /** 
+         * Determines if this matrix is invertible, which simply means a
+         * non-zero determinant.
+         * Returns: True if this matrix is invertible.
+         */
+        public bool invertible() const {
             return det() != 0;
         }
 
-        public Mat!(T, N, N) cofactor() {
+        /** 
+         * Gets a [cofactor matrix](https://en.wikipedia.org/wiki/Minor_(linear_algebra)#Cofactor_expansion_of_the_determinant).
+         * Returns: A cofactor matrix obtained from this one.
+         */
+        public Mat!(T, N, N) cofactor() const {
             static if (N == 1) {
                 return Mat!(T, N, N)(data[0]);
             } else {
@@ -273,11 +414,19 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             }
         }
 
-        public Mat!(T, N, N) adjugate() {
+        /** 
+         * Gets an [adjugate matrix](https://en.wikipedia.org/wiki/Adjugate_matrix).
+         * Returns: An adjugate matrix obtained from this one.
+         */
+        public Mat!(T, N, N) adjugate() const {
             return cofactor().transpose();
         }
 
-        public Mat!(T, N, N) inv() {
+        /** 
+         * Gets the inverse of this matrix.
+         * Returns: The inverse of this matrix.
+         */
+        public Mat!(T, N, N) inv() const {
             auto m = adjugate();
             m.div(det());
             return m;
@@ -285,15 +434,26 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
 
         // Special case for 3x3 floating-point matrices: linear transformations
         static if (N == 3 && isFloatingPoint!T) {
+            /** 
+             * Applies a 2D rotation to this matrix.
+             * Params:
+             *   theta = The angle in radians.
+             */
             public void rotate(T theta) {
                 import std.math : cos, sin;
                 this = mul(Mat!(T, N, N)(
                     cos(theta), -sin(theta), 0,
-                    sin(theta), cos(theta), 0,
-                    0, 0, 1
+                    sin(theta), cos(theta),  0,
+                    0,          0,           1
                 ));
             }
 
+            /** 
+             * Applies a 2D translation to this matrix.
+             * Params:
+             *   dx = The translation on the x-axis.
+             *   dy = The translation on the y-axis.
+             */
             public void translate(T dx, T dy) {
                 this = mul(Mat!(T, N, N)(
                     1, 0, dx,
@@ -302,6 +462,12 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
                 ));
             }
 
+            /** 
+             * Applies a 2D scaling to this matrix.
+             * Params:
+             *   sx = The scale factor on the x-axis.
+             *   sy = The scale factor on the y-axis.
+             */
             public void scale(T sx, T sy) {
                 this = mul(Mat!(T, N, N)(
                     sx, 0,  0,
@@ -310,10 +476,21 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
                 ));
             }
 
+            /** 
+             * Applies a uniform 2D scaling to this matrix on all axes.
+             * Params:
+             *   s = The scale factor to apply.
+             */
             public void scale(T s) {
                 scale(s, s);
             }
 
+            /** 
+             * Applies a 2D shear to this matrix.
+             * Params:
+             *   sx = The shear factor on the x-axis.
+             *   sy = The shear factor on the y-axis.
+             */
             public void shear(T sx, T sy) {
                 this = mul(Mat!(T, N, N)(
                     1,  sx, 0,
@@ -322,9 +499,118 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
                 ));
             }
 
+            /** 
+             * Maps the given 2D vector using this matrix.
+             * Params:
+             *   v = The vector to map.
+             * Returns: The resultant vector.
+             */
             public Vec!(T, 2) map(Vec!(T, 2) v) {
                 Vec!(T, 3) v1 = this.mul(Vec!(T, 3)(v[0], v[1], 1));
                 return Vec!(T, 2)(v1[0], v1[1]);
+            }
+        }
+
+        // Special case for 4x4 floating-point matrices: linear transformations
+        static if (N == 4 && isFloatingPoint!T) {
+            /** 
+             * Applies a 3D translation to this matrix.
+             * Params:
+             *   dx = The translation on the x-axis.
+             *   dy = The translation on the y-axis.
+             *   dz = The translation on the z-axis.
+             */
+            public void translate(T dx, T dy, T dz) {
+                this = mul(Mat!(T, N, N)(
+                    1, 0, 0, dx,
+                    0, 1, 0, dy,
+                    0, 0, 1, dz,
+                    0, 0, 0, 1
+                ));
+            }
+
+            /** 
+             * Applies a 3D scaling to this matrix.
+             * Params:
+             *   sx = The scale factor on the x-axis.
+             *   sy = The scale factor on the y-axis.
+             *   sz = The scale factor on the z-axis.
+             */
+            public void scale(T sx, T sy, T sz) {
+                this = mul(Mat!(T, N, N)(
+                    sx, 0,  0,  0,
+                    0,  sy, 0,  0,
+                    0,  0,  sz, 0,
+                    0,  0,  0,  1
+                ));
+            }
+
+            /** 
+             * Applies a uniform 3D scaling to this matrix on all axes.
+             * Params:
+             *   s = The scale factor to apply.
+             */
+            public void scale(T s) {
+                scale(s, s, s);
+            }
+
+            /** 
+             * Applies a rotation to this matrix about the x-axis.
+             * Params:
+             *   theta = The angle in radians.
+             */
+            public void rotateX(T theta) {
+                import std.math : cos, sin;
+                this = mul(Mat!(T, N, N)(
+                    1, 0,          0,           0,
+                    0, cos(theta), -sin(theta), 0,
+                    0, sin(theta), cos(theta),  0,
+                    0, 0,          0,           1
+                ));
+            }
+
+            /** 
+             * Applies a rotation to this matrix about the y-axis.
+             * Params:
+             *   theta = The angle in radians.
+             */
+            public void rotateY(T theta) {
+                import std.math : cos, sin;
+                this = mul(Mat!(T, N, N)(
+                    cos(theta),  0, sin(theta), 0,
+                    0,           1, 0,          0,
+                    -sin(theta), 0, cos(theta), 0,
+                    0,           0, 0,          1
+                ));
+            }
+
+            /** 
+             * Applies a rotation to this matrix about the z-axis.
+             * Params:
+             *   theta = The angle in radians.
+             */
+            public void rotateZ(T theta) {
+                import std.math : cos, sin;
+                this = mul(Mat!(T, N, N)(
+                    cos(theta), -sin(theta), 0, 0,
+                    sin(theta), cos(theta),  0, 0,
+                    0,          0,           1, 0,
+                    0,          0,           0, 1
+                ));
+            }
+
+            /** 
+             * Applies a 3D rotation to this matrix about the x, y, and then z
+             * axes.
+             * Params:
+             *   x = The angle to rotate about the x-axis.
+             *   y = The angle to rotate about the y-axis.
+             *   z = The angle to rotate about the z-axis.
+             */
+            public void rotate(T x, T y, T z) {
+                rotateX(x);
+                rotateY(y);
+                rotateZ(z);
             }
         }
     }

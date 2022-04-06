@@ -3,6 +3,8 @@
 		"Andrew Lalis"
 	],
 	"copyright": "Copyright © 2022, Andrew Lalis",
+	"dependencies": {
+	},
 	"description": "Library for extremely lightweight vector and matrix operations.",
 	"license": "MIT",
 	"name": "dvec",

@@ -165,45 +165,93 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
 
     alias dotProduct = dot;
 
+    /** 
+     * Adds two vectors.
+     * Params:
+     *   other = The other vector.
+     * Returns: A vector representing the sum of this and the other.
+     */
     public Vec!(T, size) opBinary(string op : "+", V)(Vec!(V, size) other) const if (isNumeric!V) {
         auto result = copy();
         result.add(other);
         return result;
     }
 
+    /** 
+     * Adds a vector to this one.
+     * Params:
+     *   other = The other vector.
+     * Returns: A reference to this vector.
+     */
     public ref Vec!(T, size) opOpAssign(string op : "+", V)(Vec!(V, size) other) if (isNumeric!V) {
         this.add(other);
         return this;
     }
 
+    /** 
+     * Subtracts two vectors.
+     * Params:
+     *   other = The other vector.
+     * Returns: A vector representing the difference of this and the other.
+     */
     public Vec!(T, size) opBinary(string op : "-", V)(Vec!(V, size) other) const if (isNumeric!V) {
         auto result = copy();
         result.sub(other);
         return result;
     }
 
+    /** 
+     * Subtracts a vector from this one.
+     * Params:
+     *   other = The other vector.
+     * Returns: A reference to this vector.
+     */
     public ref Vec!(T, size) opOpAssign(string op : "-", V)(Vec!(V, size) other) if (isNumeric!V) {
         this.sub(other);
         return this;
     }
 
+    /** 
+     * Multiplies a vector by a factor.
+     * Params:
+     *   factor = The factor to multiply by.
+     * Returns: The resultant vector.
+     */
     public Vec!(T, size) opBinary(string op : "*", V)(V factor) const if (isNumeric!V) {
         auto result = copy();
         result.mul(factor);
         return result;
     }
 
+    /** 
+     * Multiplies this vector by a factor.
+     * Params:
+     *   factor = The factor to multiply by.
+     * Returns: A reference to this vector.
+     */
     public ref Vec!(T, size) opOpAssign(string op : "*", V)(V factor) if (isNumeric!V) {
         this.mul(factor);
         return this;
     }
 
+    /** 
+     * Divides a vector by a factor.
+     * Params:
+     *   factor = The factor to divide by.
+     * Returns: The resultant vector.
+     */
     public Vec!(T, size) opBinary(string op : "/", V)(V factor) const if (isNumeric!V) {
         auto result = copy();
         result.div(factor);
         return result;
     }
 
+    /** 
+     * Divides this vector by a factor.
+     * Params:
+     *   factor = The factor to divide by.
+     * Returns: A reference to this vector.
+     */
     public ref Vec!(T, size) opOpAssign(string op : "/", V)(V factor) if (isNumeric!V) {
         this.div(factor);
         return this;
@@ -224,17 +272,22 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return 1;
     }
 
-    // TODO: Make this @nogc compatible!
+    /** 
+     * Gets a simple string representation of this vector.
+     * Returns: The string representation of this vector.
+     */
     public string toString() const {
+        import std.array : appender;
         import std.conv : to;
-        string s = "[";
+        auto s = appender!string;
+        s ~= "[";
         static foreach (i; 0 .. size - 1) {
             s ~= data[i].to!string;
             s ~= ", ";
         }
         s ~= data[size - 1].to!string;
         s ~= "]";
-        return s;
+        return s[];
     }
 
     static if (isFloatingPoint!T) {
@@ -348,6 +401,8 @@ unittest {
     assert(v1 == Vec2d(1, 1));
     assert(Vec2d(0, 0) < Vec2d(1, 1));
     assert(Vec2d(42, 1) > Vec2d(0, 0));
+    assert(Vec2d(0, 0).toString() == "[0, 0]");
+    assert(Vec3f(1, -2.5f, 0.05).toString() == "[1, -2.5, 0.05]");
 
     // Test floating-point specific methods.
     auto v6 = Vec2f(3, 3);
