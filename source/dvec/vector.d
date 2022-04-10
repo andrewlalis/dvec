@@ -66,6 +66,18 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     }
 
     /** 
+     * Computes the sum of a given array of vectors.
+     * Params:
+     *   vectors = The list of vectors to compute the sum of.
+     * Returns: The sum of all vectors.
+     */
+    public static Vec!(T, size) sum(Vec!(T, size)[] vectors) {
+        Vec!(T, size) v = Vec!(T, size)(0);
+        foreach (vector; vectors) v.add(vector);
+        return v;
+    }
+
+    /** 
      * Gets a copy of this vector.
      * Returns: A copy of this vector.
      */
@@ -97,18 +109,22 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Adds the given vector to this one.
      * Params:
      *   other = The vector to add to this one.
+     * Returns: A reference to this vector, for method chaining.
      */
-    public void add(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref Vec!(T, size) add(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += other[i];
+        return this;
     }
 
     /** 
      * Subtracts the given vector from this one.
      * Params:
      *   other = The vector to subtract from this one.
+     * Returns: A reference to this vector, for method chaining.
      */
-    public void sub(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref Vec!(T, size) sub(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= other[i];
+        return this;
     }
 
     alias subtract = sub;
@@ -117,9 +133,11 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Multiplies this vector by a factor, element-wise.
      * Params:
      *   factor = The factor to multiply by.
+     * Returns: A reference to this vector, for method chaining.
      */
-    public void mul(V)(V factor) if (isNumeric!V) {
+    public ref Vec!(T, size) mul(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= factor;
+        return this;
     }
 
     alias multiply = mul;
@@ -128,9 +146,11 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Divides this vector by a factor, element-wise.
      * Params:
      *   factor = The factor to divide by.
+     * Returns: A reference to this vector, for method chaining.
      */
-    public void div(V)(V factor) if (isNumeric!V) {
+    public ref Vec!(T, size) div(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= factor;
+        return this;
     }
 
     alias divide = div;
@@ -294,12 +314,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         /** 
          * [Normalizes](https://en.wikipedia.org/wiki/Unit_vector) this vector,
          * such that it will have a magnitude of 1.
+         * Returns: A reference to this vector, for method chaining.
          */
-        public void norm() {
+        public ref Vec!(T, size) norm() {
             const double mag = mag();
             static foreach (i; 0 .. size) {
                 data[i] /= mag;
             }
+            return this;
         }
 
         alias normalize = norm;
@@ -313,13 +335,15 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * coordinate, and the second element is the **y** coordinate. The
          * first element becomes the **radius** and the second becomes the
          * angle **theta**.
+         * Returns: A reference to this vector, for method chaining.
          */
-        public void toPolar() {
+        public ref Vec!(T, size) toPolar() {
             import std.math : atan2;
             T radius = mag();
             T angle = atan2(data[1], data[0]);
             data[0] = radius;
             data[1] = angle;
+            return this;
         }
 
         /** 
@@ -329,13 +353,15 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * and the second element is the angle **theta**. The first element
          * becomes the **x** coordinate, and the second becomes the **y**
          * coordinate.
+         * Returns: A reference to this vector, for method chaining.
          */
-        public void toCartesian() {
+        public ref Vec!(T, size) toCartesian() {
             import std.math : cos, sin;
             T x = data[0] * cos(data[1]);
             T y = data[0] * sin(data[1]);
             data[0] = x;
             data[1] = y;
+            return this;
         }
     }
 }
