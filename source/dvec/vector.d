@@ -1,6 +1,11 @@
+/** 
+ * This module contains the `Vec` templated struct representing vectors and
+ * their operations.
+ */
 module dvec.vector;
 
 import std.traits : isNumeric, isFloatingPoint;
+import dvec.vector_types;
 
 /** 
  * Generic struct that represents a vector holding `size` elements of type `T`.
@@ -19,12 +24,22 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     public T[size] data;
 
     /** 
+     * Internal alias to make template methods more readable. We can just say
+     * `MY_TYPE` instead of `Vec!(T, size)` everywhere.
+     */
+    private alias MY_TYPE = Vec!(T, size);
+
+    /** 
      * Constructs a vector from an array of elements.
      * Params:
      *   elements = The elements to put in the vector.
      */
     public this(T[size] elements) {
         static foreach (i; 0 .. size) data[i] = elements[i];
+    }
+    unittest {
+        Vec3f v = Vec3f([1f, 2f, 3f]);
+        assert(v.data == [1f, 2f, 3f]);
     }
 
     /** 
@@ -36,6 +51,10 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         if (elements.length != size) assert(false, "Invalid number of elements provided to Vec constructor.");
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
+    unittest {
+        Vec3i v = Vec3i(5, 4, 3);
+        assert(v.data == [5, 4, 3]);
+    }
 
     /** 
      * Constructs a vector where all elements have the given value.
@@ -45,24 +64,41 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     public this(T value) {
         static foreach (i; 0 .. size) data[i] = value;
     }
+    unittest {
+        Vec2f v = Vec2f(1f);
+        assert(v.data == [1f, 1f]);
+        Vec!(float, 25) v2 = Vec!(float, 25)(3f);
+        foreach (value; v2.data) {
+            assert(value == 3f);
+        }
+    }
 
     /** 
      * Constructs a vector as a copy of the other.
      * Params:
      *   other = The vector to copy.
      */
-    public this(Vec!(T, size) other) {
+    public this(MY_TYPE other) {
         this(other.data);
+    }
+    unittest {
+        Vec2f vOriginal = Vec2f(5f, 16f);
+        Vec2f vCopy = Vec2f(vOriginal);
+        assert(vCopy.data == [5f, 16f]);
     }
 
     /** 
      * Constructs a vector containing all 0's.
      * Returns: An vector containing all 0's.
      */
-    public static Vec!(T, size) empty() {
-        Vec!(T, size) v;
+    public static MY_TYPE empty() {
+        MY_TYPE v;
         static foreach (i; 0 .. size) v[i] = 0;
         return v;
+    }
+    unittest {
+        Vec4f v = Vec4f.empty();
+        assert(v.data == [0f, 0f, 0f, 0f]);
     }
 
     /** 
@@ -71,18 +107,34 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   vectors = The list of vectors to compute the sum of.
      * Returns: The sum of all vectors.
      */
-    public static Vec!(T, size) sum(Vec!(T, size)[] vectors) {
-        Vec!(T, size) v = Vec!(T, size)(0);
+    public static MY_TYPE sum(MY_TYPE[] vectors) {
+        MY_TYPE v = MY_TYPE(0);
         foreach (vector; vectors) v.add(vector);
         return v;
+    }
+    unittest {
+        Vec2i v1 = Vec2i(1, 1);
+        Vec2i v2 = Vec2i(2, 2);
+        Vec2i v3 = Vec2i(3, 3);
+        Vec2i v4 = Vec2i(-1, -4);
+        assert(Vec2i.sum([v1, v2]) == v3);
+        assert(Vec2i.sum([v1, v2, v3]) == Vec2i(6, 6));
+        assert(Vec2i.sum([v3, v4]) == Vec2i(2, -1));
     }
 
     /** 
      * Gets a copy of this vector.
      * Returns: A copy of this vector.
      */
-    public Vec!(T, size) copy() const {
-        return Vec!(T, size)(this);
+    public MY_TYPE copy() const {
+        return MY_TYPE(this);
+    }
+    unittest {
+        Vec3f v = Vec3f(0.5f, 1.0f, 0.75f);
+        Vec3f vCopy = v.copy();
+        assert(v.data == vCopy.data);
+        v.data[0] = -0.5f;
+        assert(vCopy.data[0] == 0.5f);
     }
 
     /** 
@@ -94,6 +146,12 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     public T opIndex(size_t i) const {
         return data[i];
     }
+    unittest {
+        Vec3f v = Vec3f(1f, 2f, 3f);
+        assert(v[0] == 1f);
+        assert(v[1] == 2f);
+        assert(v[2] == 3f);
+    }
 
     /** 
      * Inserts an element at the specified index.
@@ -104,6 +162,12 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     public void opIndexAssign(T value, size_t i) {
         data[i] = value;
     }
+    unittest {
+        Vec3i v;
+        assert(v[0] == 0);
+        v[0] = 42;
+        assert(v[0] == 42);
+    }
 
     /** 
      * Adds the given vector to this one.
@@ -111,9 +175,16 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to add to this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref Vec!(T, size) add(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE add(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += other[i];
         return this;
+    }
+    unittest {
+        Vec3i v1 = Vec3i(1);
+        Vec3i v2 = Vec3i(2);
+        v1.add(v2);
+        assert(v1.data == [3, 3, 3]);
+        assert(v2.data == [2, 2, 2]);
     }
 
     /** 
@@ -122,12 +193,17 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to subtract from this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref Vec!(T, size) sub(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE sub(V)(Vec!(V, size) other) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= other[i];
         return this;
     }
-
-    alias subtract = sub;
+    unittest {
+        Vec3i v1 = Vec3i(1);
+        Vec3i v2 = Vec3i(2);
+        v1.sub(v2);
+        assert(v1.data == [-1, -1, -1]);
+        assert(v2.data == [2, 2, 2]);
+    }
 
     /** 
      * Multiplies this vector by a factor, element-wise.
@@ -135,12 +211,27 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref Vec!(T, size) mul(V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE mul(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= factor;
         return this;
     }
+    unittest {
+        assert(Vec2i(2).mul(2).data == [4, 4]);
+    }
 
-    alias multiply = mul;
+    /** 
+     * Multiplies this vector by another vector, element-wise.
+     * Params:
+     *   other = The other vector to multiply with.
+     * Returns: A reference to this vector, for method chaining.
+     */
+    public ref MY_TYPE mul(V)(Vec!(V, size) other) if (isNumeric!V) {
+        static foreach (i; 0 .. size) data[i] *= other[i];
+        return this;
+    }
+    unittest {
+        assert(Vec2i(1, 2).mul(Vec2i(3, 2)).data == [3, 4]);
+    }
 
     /** 
      * Divides this vector by a factor, element-wise.
@@ -148,12 +239,41 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref Vec!(T, size) div(V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE div(V)(V factor) if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= factor;
         return this;
     }
+    unittest {
+        assert(Vec2i(8).div(2).data == [4, 4]);
+    }
 
-    alias divide = div;
+    /** 
+     * Divides this vector by another vector, element-wise.
+     * Params:
+     *   other = The other vector to divide with.
+     * Returns: A reference to this vector, for method chaining.
+     */
+    public ref MY_TYPE div(V)(Vec!(V, size) other) if (isNumeric!V) {
+        static foreach (i; 0 .. size) data[i] /= other[i];
+        return this;
+    }
+    unittest {
+        assert(Vec2i(8).div(Vec2i(2, 4)).data == [4, 2]);
+    }
+
+    /** 
+     * Determines the squared magnitude of this vector.
+     * Returns: The squared magnitude of this vector.
+     */
+    public double mag2() const {
+        double sum = 0;
+        static foreach (i; 0 .. size) sum += data[i] * data[i];
+        return sum;
+    }
+    unittest {
+        assert(Vec2i(2).mag2() == 8);
+        assert(Vec2f(3f, 4f).mag2() == 5f * 5f);
+    }
 
     /** 
      * Determines the magnitude of this vector.
@@ -161,14 +281,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      */
     public double mag() const {
         import std.math : sqrt;
-        double sum = 0;
-        static foreach (i; 0 .. size) sum += data[i] * data[i];
-        return sqrt(sum);
+        return sqrt(mag2());
     }
-
-    alias magnitude = mag;
-    alias length = mag;
-    alias len = mag;
+    unittest {
+        import std.math : sqrt;
+        assert(Vec2i(1, 0).mag() == 1);
+        assert(Vec2f(3f, 4f).mag() == 5f);
+        assert(Vec2i(1, 1).mag() == sqrt(2.0));
+    }
 
     /** 
      * Determines the [dot product](https://en.wikipedia.org/wiki/Dot_product)
@@ -177,13 +297,17 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: The dot product of the vectors.
      */
-    public T dot(Vec!(T, size) other) const {
+    public T dot(MY_TYPE other) const {
         T sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * other[i];
         return sum;
     }
-
-    alias dotProduct = dot;
+    unittest {
+        assert(Vec3i(1, 3, -5).dot(Vec3i(4, -2, -1)) == 3);
+        assert(Vec2f(1.0f, 0.0f).dot(Vec2f(0.0f, 1.0f)) == 0f);
+        assert(Vec2f(1.0f, 0.0f).dot(Vec2f(1.0f, 0.0f)) == 1f);
+        assert(Vec2f(1.0f, 0.0f).dot(Vec2f(-1.0f, 0.0f)) == -1f);
+    }
 
     /** 
      * Adds two vectors.
@@ -191,10 +315,29 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A vector representing the sum of this and the other.
      */
-    public Vec!(T, size) opBinary(string op : "+", V)(Vec!(V, size) other) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "+", V)(Vec!(V, size) other) const if (isNumeric!V) {
         auto result = copy();
         result.add(other);
         return result;
+    }
+    unittest {
+        assert(Vec2i(1) + Vec2i(3) == Vec2i(4));
+    }
+
+    /** 
+     * Adds a scalar value to a vector, element-wise.
+     * Params:
+     *   scalar = The scalar value to add to the vector.
+     * Returns: A vector representing the sum of this and the scalar value
+     * applied to all elements.
+     */
+    public MY_TYPE opBinary(string op : "+", V)(V scalar) const if (isNumeric!V) {
+        auto result = copy();
+        result.add(Vec!(V, size)(scalar));
+        return result;
+    }
+    unittest {
+        assert(Vec2i(1) + 3 == Vec2i(4));
     }
 
     /** 
@@ -203,10 +346,37 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A reference to this vector.
      */
-    public ref Vec!(T, size) opOpAssign(string op : "+", V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "+", V)(Vec!(V, size) other) if (isNumeric!V) {
         this.add(other);
         return this;
     }
+    unittest {
+        Vec3i v = Vec3i(1, 2, 3);
+        v += Vec3i(1);
+        assert(v.data == [2, 3, 4]);
+    }
+
+    /** 
+     * Adds a scalar value to this vector.
+     * Params:
+     *   scalar = The scalar value to add to the vector.
+     * Returns: A reference to this vector.
+     */
+    public ref MY_TYPE opOpAssign(string op : "+", V)(V scalar) if (isNumeric!V) {
+        this.add(Vec!(V, size)(scalar));
+        return this;
+    }
+    unittest {
+        Vec3i v = Vec3i(1, 2, 3);
+        v += 2;
+        assert(v.data == [3, 4, 5]);
+    }
+
+    // TODO: Add scalar operators for:
+    // sub
+    // mul
+    // div
+    // and non-operator overload methods for add, sub
 
     /** 
      * Subtracts two vectors.
@@ -214,10 +384,13 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A vector representing the difference of this and the other.
      */
-    public Vec!(T, size) opBinary(string op : "-", V)(Vec!(V, size) other) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "-", V)(Vec!(V, size) other) const if (isNumeric!V) {
         auto result = copy();
         result.sub(other);
         return result;
+    }
+    unittest {
+        assert(Vec2i(4) - Vec2i(1) == Vec2i(3));
     }
 
     /** 
@@ -226,9 +399,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A reference to this vector.
      */
-    public ref Vec!(T, size) opOpAssign(string op : "-", V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "-", V)(Vec!(V, size) other) if (isNumeric!V) {
         this.sub(other);
         return this;
+    }
+    unittest {
+        Vec3i v = Vec3i(1, 2, 3);
+        v -= Vec3i(2);
+        assert(v.data == [-1, 0, 1]);
     }
 
     /** 
@@ -237,10 +415,13 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: The resultant vector.
      */
-    public Vec!(T, size) opBinary(string op : "*", V)(V factor) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "*", V)(V factor) const if (isNumeric!V) {
         auto result = copy();
         result.mul(factor);
         return result;
+    }
+    unittest {
+        assert(Vec2f(0.5f) * 2f == Vec2f(1.0f));
     }
 
     /** 
@@ -249,9 +430,14 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: A reference to this vector.
      */
-    public ref Vec!(T, size) opOpAssign(string op : "*", V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "*", V)(V factor) if (isNumeric!V) {
         this.mul(factor);
         return this;
+    }
+    unittest {
+        Vec2f v = Vec2f(2f);
+        v *= 2f;
+        assert(v.data == [4f, 4f]);
     }
 
     /** 
@@ -260,10 +446,13 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: The resultant vector.
      */
-    public Vec!(T, size) opBinary(string op : "/", V)(V factor) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "/", V)(V factor) const if (isNumeric!V) {
         auto result = copy();
         result.div(factor);
         return result;
+    }
+    unittest {
+        assert(Vec2f(8f) / 4f == Vec2f(2f));
     }
 
     /** 
@@ -272,24 +461,39 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: A reference to this vector.
      */
-    public ref Vec!(T, size) opOpAssign(string op : "/", V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "/", V)(V factor) if (isNumeric!V) {
         this.div(factor);
         return this;
+    }
+    unittest {
+        Vec2f v = Vec2f(2f, 4f);
+        v /= 4f;
+        assert(v.data == [0.5f, 1f]);
     }
 
     /** 
      * Compares this vector to another, based on their magnitudes.
      * Params:
      *   other = The vector to compare to.
-     * Returns: 0 if the vectors have equal magnituded, 1 if this vector's
+     * Returns: 0 if the vectors have equal magnitude, 1 if this vector's
      * magnitude is bigger, and -1 if the other's is bigger.
      */
-    public int opCmp(Vec!(T, size) other) const {
-        double a = this.mag();
-        double b = other.mag();
+    public int opCmp(MY_TYPE other) const {
+        double a = this.mag2();
+        double b = other.mag2();
         if (a == b) return 0;
         if (a < b) return -1;
         return 1;
+    }
+    unittest {
+        Vec3i v1 = Vec3i(1);
+        Vec3i v2 = Vec3i(2);
+        Vec3i v3 = Vec3i(3);
+        assert(v1 == v1);
+        assert(v1 != v2);
+        assert(v1 < v2);
+        assert(v2 > v1);
+        assert(v3 > v2);
     }
 
     /** 
@@ -316,15 +520,13 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * such that it will have a magnitude of 1.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref Vec!(T, size) norm() {
+        public ref MY_TYPE norm() {
             const double mag = mag();
             static foreach (i; 0 .. size) {
                 data[i] /= mag;
             }
             return this;
         }
-
-        alias normalize = norm;
     }
 
     static if (isFloatingPoint!T && size == 2) {
@@ -337,7 +539,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * angle **theta**.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref Vec!(T, size) toPolar() {
+        public ref MY_TYPE toPolar() {
             import std.math : atan2;
             T radius = mag();
             T angle = atan2(data[1], data[0]);
@@ -355,7 +557,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * coordinate.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref Vec!(T, size) toCartesian() {
+        public ref MY_TYPE toCartesian() {
             import std.math : cos, sin;
             T x = data[0] * cos(data[1]);
             T y = data[0] * sin(data[1]);
@@ -364,20 +566,27 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
             return this;
         }
     }
+
+    static if (isFloatingPoint!T && size == 3) {
+        /** 
+         * Computes the [cross product](https://en.wikipedia.org/wiki/Cross_product) of this vector and another, and stores
+         * the result in this vector.
+         * Params:
+         *   other = The other vector.
+         * Returns: A reference to this vector, for method chaining.
+         */
+        public ref MY_TYPE cross(MY_TYPE other) {
+            MY_TYPE tmp;
+            tmp[0] = data[1] * other[2] - data[2] * other[1];
+            tmp[1] = data[2] * other[0] - data[0] * other[2];
+            tmp[2] = data[0] * other[1] - data[1] * other[0];
+            data[0] = tmp[0];
+            data[1] = tmp[1];
+            data[2] = tmp[2];
+            return this;
+        }
+    }
 }
-
-// Aliases for common vector types.
-alias Vec2f = Vec!(float, 2);
-alias Vec3f = Vec!(float, 3);
-alias Vec4f = Vec!(float, 4);
-
-alias Vec2d = Vec!(double, 2);
-alias Vec3d = Vec!(double, 3);
-alias Vec4d = Vec!(double, 4);
-
-alias Vec2i = Vec!(int, 2);
-alias Vec3i = Vec!(int, 3);
-alias Vec4i = Vec!(int, 4);
 
 unittest {
     import std.stdio;
@@ -388,47 +597,6 @@ unittest {
         double highBound = expected + delta;
         assert(actual > lowBound && actual < highBound, msg);
     }
-
-    // Test constructors.
-    auto v1 = Vec2d([1.0, 2.0]);
-    assert(v1.data == [1.0, 2.0]);
-    auto v2 = Vec2d(1.0, 2.0);
-    assert(v2.data == [1.0, 2.0]);
-    auto v3 = Vec3f(3.14f);
-    assert(v3.data == [3.14f, 3.14f, 3.14f]);
-    auto v4 = Vec3f(v3);
-    assert(v4.data == v3.data);
-    auto v5 = Vec2i.empty();
-    assert(v5.data == [0, 0]);
-
-    // Test basic methods.
-    v1.add(v2);
-    assert(v1.data == [2.0, 4.0]);
-    assert(v1[0] == 2.0);
-    assert(v1[1] == 4.0);
-    v1.sub(v2);
-    assert(v1.data == [1.0, 2.0]);
-    v1.mul(3.0);
-    assert(v1.data == [3.0, 6.0]);
-    v1.div(6.0);
-    assert(v1.data == [0.5, 1.0]);
-    assert(Vec2f(3, 4).mag == 5.0f);
-    assert(Vec2d.empty.mag == 0);
-    assert(Vec2d(1.0, 1.0).dot(Vec2d(1.0, 1.0)) == 2.0);
-
-    // Operator overloads.
-    assert(Vec2d(1, 1) + Vec2d(2, 1) == Vec2d(3, 2));
-    assert(Vec2d(4, 4) - Vec2d(0, 3) == Vec2d(4, 1));
-    v1 = Vec2d(1, 1);
-    v1 += Vec2d(1, 1);
-    v1 *= -2;
-    assert(v1 == Vec2d(-4, -4));
-    v1 /= -4;
-    assert(v1 == Vec2d(1, 1));
-    assert(Vec2d(0, 0) < Vec2d(1, 1));
-    assert(Vec2d(42, 1) > Vec2d(0, 0));
-    assert(Vec2d(0, 0).toString() == "[0, 0]");
-    assert(Vec3f(1, -2.5f, 0.05).toString() == "[1, -2.5, 0.05]");
 
     // Test floating-point specific methods.
     auto v6 = Vec2f(3, 3);

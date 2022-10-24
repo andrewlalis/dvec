@@ -1,7 +1,12 @@
+/** 
+ * This module contains the `Mat` templated struct representing matrices and
+ * their operations.
+ */
 module dvec.matrix;
 
 import std.traits : isNumeric, isFloatingPoint;
 import dvec.vector;
+import dvec.vector_types;
 
 /** 
  * Generic struct that represents a matrix with `rowCount` rows and `colCount`
@@ -195,8 +200,6 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return this;
     }
 
-    alias subtract = sub;
-
     /** 
      * Multiplies this matrix by a factor.
      * Params:
@@ -208,8 +211,6 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         return this;
     }
 
-    alias multiply = mul;
-
     /** 
      * Divides this matrix by a factor.
      * Params:
@@ -220,8 +221,6 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
         static foreach (i; 0 .. data.length) data[i] /= factor;
         return this;
     }
-
-    alias divide = div;
 
     /** 
      * Gets the [transpose](https://en.wikipedia.org/wiki/Transpose) of this
@@ -477,8 +476,6 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             return this;
         }
 
-        alias inverse = inv;
-
         // Special case for 3x3 floating-point matrices: linear transformations
         static if (N == 3 && isFloatingPoint!T) {
             /** 
@@ -720,7 +717,7 @@ unittest {
 
     auto m8 = Mat!(double, 2, 3)([1, -1, 2, 0, -3, 1]);
     Vec3d v1 = Vec3d(2, 1, 0);
-    assert(m8.multiply(v1).data == [1, -3]);
+    assert(m8.mul(v1).data == [1, -3]);
 
     Vec3f p = Vec3f(0, 0, 1);
     Mat3f tx = Mat3f([
