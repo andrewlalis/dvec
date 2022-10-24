@@ -34,7 +34,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Params:
      *   elements = The elements to put in the vector.
      */
-    public this(T[size] elements) {
+    public this(T[size] elements) @nogc {
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
     unittest {
@@ -47,7 +47,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Params:
      *   elements = The elements to put in the vector.
      */
-    public this(T[] elements...) {
+    public this(T[] elements...) @nogc {
         if (elements.length != size) assert(false, "Invalid number of elements provided to Vec constructor.");
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
@@ -61,7 +61,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Params:
      *   value = The value to assign to all elements in the vector.
      */
-    public this(T value) {
+    public this(T value) @nogc {
         static foreach (i; 0 .. size) data[i] = value;
     }
     unittest {
@@ -78,7 +78,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Params:
      *   other = The vector to copy.
      */
-    public this(MY_TYPE other) {
+    public this(MY_TYPE other) @nogc {
         this(other.data);
     }
     unittest {
@@ -91,7 +91,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Constructs a vector containing all 0's.
      * Returns: An vector containing all 0's.
      */
-    public static MY_TYPE empty() {
+    public static MY_TYPE empty() @nogc {
         MY_TYPE v;
         static foreach (i; 0 .. size) v[i] = 0;
         return v;
@@ -107,7 +107,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   vectors = The list of vectors to compute the sum of.
      * Returns: The sum of all vectors.
      */
-    public static MY_TYPE sum(MY_TYPE[] vectors) {
+    public static MY_TYPE sum(MY_TYPE[] vectors) @nogc {
         MY_TYPE v = MY_TYPE(0);
         foreach (vector; vectors) v.add(vector);
         return v;
@@ -126,7 +126,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Gets a copy of this vector.
      * Returns: A copy of this vector.
      */
-    public MY_TYPE copy() const {
+    public MY_TYPE copy() const @nogc {
         return MY_TYPE(this);
     }
     unittest {
@@ -143,7 +143,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   i = The index of the element.
      * Returns: The element at the specified index.
      */
-    public T opIndex(size_t i) const {
+    public T opIndex(size_t i) const @nogc {
         return data[i];
     }
     unittest {
@@ -159,7 +159,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   value = The value to assign.
      *   i = The index of the element.
      */
-    public void opIndexAssign(T value, size_t i) {
+    public void opIndexAssign(T value, size_t i) @nogc {
         data[i] = value;
     }
     unittest {
@@ -175,7 +175,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to add to this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE add(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE add(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += other[i];
         return this;
     }
@@ -193,7 +193,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to subtract from this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE sub(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE sub(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= other[i];
         return this;
     }
@@ -211,7 +211,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE mul(V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE mul(V)(V factor) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= factor;
         return this;
     }
@@ -225,7 +225,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector to multiply with.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE mul(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE mul(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= other[i];
         return this;
     }
@@ -239,7 +239,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE div(V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE div(V)(V factor) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= factor;
         return this;
     }
@@ -253,7 +253,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector to divide with.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE div(V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE div(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= other[i];
         return this;
     }
@@ -265,7 +265,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Determines the squared magnitude of this vector.
      * Returns: The squared magnitude of this vector.
      */
-    public double mag2() const {
+    public double mag2() const @nogc {
         double sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * data[i];
         return sum;
@@ -279,7 +279,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Determines the magnitude of this vector.
      * Returns: The magnitude of this vector.
      */
-    public double mag() const {
+    public double mag() const @nogc {
         import std.math : sqrt;
         return sqrt(mag2());
     }
@@ -297,7 +297,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: The dot product of the vectors.
      */
-    public T dot(MY_TYPE other) const {
+    public T dot(MY_TYPE other) const @nogc {
         T sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * other[i];
         return sum;
@@ -315,7 +315,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A vector representing the sum of this and the other.
      */
-    public MY_TYPE opBinary(string op : "+", V)(Vec!(V, size) other) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "+", V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
         auto result = copy();
         result.add(other);
         return result;
@@ -331,7 +331,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: A vector representing the sum of this and the scalar value
      * applied to all elements.
      */
-    public MY_TYPE opBinary(string op : "+", V)(V scalar) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "+", V)(V scalar) const @nogc if (isNumeric!V) {
         auto result = copy();
         result.add(Vec!(V, size)(scalar));
         return result;
@@ -346,7 +346,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE opOpAssign(string op : "+", V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "+", V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         this.add(other);
         return this;
     }
@@ -362,7 +362,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   scalar = The scalar value to add to the vector.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE opOpAssign(string op : "+", V)(V scalar) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "+", V)(V scalar) @nogc if (isNumeric!V) {
         this.add(Vec!(V, size)(scalar));
         return this;
     }
@@ -384,7 +384,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A vector representing the difference of this and the other.
      */
-    public MY_TYPE opBinary(string op : "-", V)(Vec!(V, size) other) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "-", V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
         auto result = copy();
         result.sub(other);
         return result;
@@ -399,7 +399,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE opOpAssign(string op : "-", V)(Vec!(V, size) other) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "-", V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         this.sub(other);
         return this;
     }
@@ -415,7 +415,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: The resultant vector.
      */
-    public MY_TYPE opBinary(string op : "*", V)(V factor) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "*", V)(V factor) const @nogc if (isNumeric!V) {
         auto result = copy();
         result.mul(factor);
         return result;
@@ -430,7 +430,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE opOpAssign(string op : "*", V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "*", V)(V factor) @nogc if (isNumeric!V) {
         this.mul(factor);
         return this;
     }
@@ -446,7 +446,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: The resultant vector.
      */
-    public MY_TYPE opBinary(string op : "/", V)(V factor) const if (isNumeric!V) {
+    public MY_TYPE opBinary(string op : "/", V)(V factor) const @nogc if (isNumeric!V) {
         auto result = copy();
         result.div(factor);
         return result;
@@ -461,7 +461,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE opOpAssign(string op : "/", V)(V factor) if (isNumeric!V) {
+    public ref MY_TYPE opOpAssign(string op : "/", V)(V factor) @nogc if (isNumeric!V) {
         this.div(factor);
         return this;
     }
@@ -478,7 +478,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: 0 if the vectors have equal magnitude, 1 if this vector's
      * magnitude is bigger, and -1 if the other's is bigger.
      */
-    public int opCmp(MY_TYPE other) const {
+    public int opCmp(MY_TYPE other) const @nogc {
         double a = this.mag2();
         double b = other.mag2();
         if (a == b) return 0;
@@ -520,7 +520,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * such that it will have a magnitude of 1.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE norm() {
+        public ref MY_TYPE norm() @nogc {
             const double mag = mag();
             static foreach (i; 0 .. size) {
                 data[i] /= mag;
@@ -539,7 +539,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * angle **theta**.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE toPolar() {
+        public ref MY_TYPE toPolar() @nogc {
             import std.math : atan2;
             T radius = mag();
             T angle = atan2(data[1], data[0]);
@@ -557,7 +557,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * coordinate.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE toCartesian() {
+        public ref MY_TYPE toCartesian() @nogc {
             import std.math : cos, sin;
             T x = data[0] * cos(data[1]);
             T y = data[0] * sin(data[1]);
@@ -575,7 +575,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          *   other = The other vector.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE cross(MY_TYPE other) {
+        public ref MY_TYPE cross(MY_TYPE other) @nogc {
             MY_TYPE tmp;
             tmp[0] = data[1] * other[2] - data[2] * other[1];
             tmp[1] = data[2] * other[0] - data[0] * other[2];
