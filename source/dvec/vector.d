@@ -360,10 +360,6 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         assert(Vec2f(1.0f, 0.0f).dot(Vec2f(-1.0f, 0.0f)) == -1f);
     }
 
-    // /--------------------\
-    // | OPERATOR OVERLOADS |
-    // \--------------------/
-
     /** 
      * Implements the basic unary operators on a vector. This supports:
      * - Negation `-v`: Negates all a vector's components.
@@ -528,15 +524,31 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * coordinate, and the second element is the **y** coordinate. The
          * first element becomes the **radius** and the second becomes the
          * angle **theta**.
-         * Returns: A reference to this vector, for method chaining.
+         * - The angle is normalized to be within the range [0, 2*PI).
+         * Returns: A reference to this vector.
          */
         public ref MY_TYPE toPolar() @nogc {
-            import std.math : atan2;
+            import std.math : atan2, PI;
             T radius = mag();
             T angle = atan2(data[1], data[0]);
+            if (angle < 0) {
+                angle += 2 * PI;
+            } else if (angle >= 2 * PI) {
+                angle -= 2 * PI;
+            }
             data[0] = radius;
             data[1] = angle;
             return this;
+        }
+        unittest {
+            import dvec.vector_types;
+            import std.math;
+            assert(Vec2f(1f, 0f).toPolar() == Vec2f(1f, 0f));
+            assert(Vec2f(0f, 1f).toPolar() == Vec2f(1f, PI_2));
+            assert(Vec2f(-1f, 0f).toPolar() == Vec2f(1f, PI));
+            assert(Vec2f(0f, -1f).toPolar() == Vec2f(1f, 3f * PI / 2f));
+            assert(Vec2f(1f, 1f).toPolar() == Vec2f(SQRT2, PI_4));
+            assert(Vec2f(-50f, -50f).toPolar() == Vec2f(10f * sqrt(50f), 5 * PI_4));
         }
 
         /** 
@@ -546,7 +558,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * and the second element is the angle **theta**. The first element
          * becomes the **x** coordinate, and the second becomes the **y**
          * coordinate.
-         * Returns: A reference to this vector, for method chaining.
+         * Returns: A reference to this vector.
          */
         public ref MY_TYPE toCartesian() @nogc {
             import std.math : cos, sin;
