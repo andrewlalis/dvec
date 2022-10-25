@@ -339,13 +339,15 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      */
     public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols) const @nogc
         if (rowCount - n > 0 && colCount - m > 0) {
-        // TODO: Improve efficiency with static stuff.
         Mat!(T, rowCount - n, colCount - m) sub;
         size_t subIdx = 0;
-        foreach (idx; 0 .. data.length) {
-            size_t row = idx / colCount;
-            size_t col = idx % colCount;
-            bool skip = false;
+        size_t row;
+        size_t col;
+        bool skip;
+        static foreach (idx; 0 .. data.length) {
+            row = idx / colCount;
+            col = idx % colCount;
+            skip = false;
             foreach (r; rows) {
                 if (r == row) {
                     skip = true;
