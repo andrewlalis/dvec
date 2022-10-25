@@ -7,7 +7,7 @@ dvec offers the basic linear algebra primitives:
 
 Each of these can be of any desired integer size (within the limits of your system). For example, `Vec!(float, 5) v;` defines a 5-dimensional floating-point vector, and `Mat!(int, 2, 3) m;` defines a 2x3 (2 rows by 3 columns) integer matrix. However, this can get to be a bit tedious, so we've included the most common vectors and matrices as aliases for you:
 - 2, 3, and 4-dimensional vectors of float, double, and int types: `Vec3d`, `Vec2i`, and `Vec4f`, for example.
-- 2, 3, and 4-dimensional square matrices of float and double types: `Mat2f` and `Mat4d`, for example.
+- 2, 3, and 4-dimensional square matrices of float, double, and int types: `Mat2f`, `Mat3i`, and `Mat4d`, for example.
 
 Each primitive is a simple struct with a fully transparent internal structure, and implements all the basic arithmetic operators, so you can do things like this easily:
 ```d

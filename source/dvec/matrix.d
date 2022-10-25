@@ -13,7 +13,14 @@ import dvec.vector_types;
  * columns, holding elements of type `T`. A matrix must be at least 1x1.
  */
 struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 && colCount > 0) {
+    /** 
+     * The width of this matrix.
+     */
     public static const size_t WIDTH = colCount;
+
+    /** 
+     * The height of this matrix.
+     */
     public static const size_t HEIGHT = rowCount;
 
     /** 
@@ -682,18 +689,10 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
     }
 }
 
-// Aliases for common matrix types.
-alias Mat2f = Mat!(float, 2, 2);
-alias Mat3f = Mat!(float, 3, 3);
-alias Mat4f = Mat!(float, 4, 4);
-
-alias Mat2d = Mat!(double, 2, 2);
-alias Mat3d = Mat!(double, 3, 3);
-alias Mat4d = Mat!(double, 4, 4);
-
 unittest {
     import std.stdio;
     import dvec.vector;
+    import dvec.matrix_types;
 
     auto m1 = Mat3d();
     assert(m1.data.length == 9);

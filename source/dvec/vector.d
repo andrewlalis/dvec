@@ -5,7 +5,6 @@
 module dvec.vector;
 
 import std.traits : isNumeric, isFloatingPoint;
-import dvec.vector_types;
 
 /** 
  * Generic struct that represents a vector holding `size` elements of type `T`.
@@ -38,6 +37,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
     unittest {
+        import dvec.vector_types;
         Vec3f v = Vec3f([1f, 2f, 3f]);
         assert(v.data == [1f, 2f, 3f]);
     }
@@ -52,6 +52,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         static foreach (i; 0 .. size) data[i] = elements[i];
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v = Vec3i(5, 4, 3);
         assert(v.data == [5, 4, 3]);
     }
@@ -65,6 +66,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         static foreach (i; 0 .. size) data[i] = value;
     }
     unittest {
+        import dvec.vector_types;
         Vec2f v = Vec2f(1f);
         assert(v.data == [1f, 1f]);
         Vec!(float, 25) v2 = Vec!(float, 25)(3f);
@@ -82,6 +84,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         this(other.data);
     }
     unittest {
+        import dvec.vector_types;
         Vec2f vOriginal = Vec2f(5f, 16f);
         Vec2f vCopy = Vec2f(vOriginal);
         assert(vCopy.data == [5f, 16f]);
@@ -97,6 +100,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return v;
     }
     unittest {
+        import dvec.vector_types;
         Vec4f v = Vec4f.empty();
         assert(v.data == [0f, 0f, 0f, 0f]);
     }
@@ -113,6 +117,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return v;
     }
     unittest {
+        import dvec.vector_types;
         Vec2i v1 = Vec2i(1, 1);
         Vec2i v2 = Vec2i(2, 2);
         Vec2i v3 = Vec2i(3, 3);
@@ -130,6 +135,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return MY_TYPE(this);
     }
     unittest {
+        import dvec.vector_types;
         Vec3f v = Vec3f(0.5f, 1.0f, 0.75f);
         Vec3f vCopy = v.copy();
         assert(v.data == vCopy.data);
@@ -147,6 +153,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return data[i];
     }
     unittest {
+        import dvec.vector_types;
         Vec3f v = Vec3f(1f, 2f, 3f);
         assert(v[0] == 1f);
         assert(v[1] == 2f);
@@ -163,6 +170,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         data[i] = value;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v;
         assert(v[0] == 0);
         v[0] = 42;
@@ -180,11 +188,29 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v1 = Vec3i(1);
         Vec3i v2 = Vec3i(2);
         v1.add(v2);
         assert(v1.data == [3, 3, 3]);
         assert(v2.data == [2, 2, 2]);
+    }
+
+    /** 
+     * Adds the given scalar value to this vector.
+     * Params:
+     *   scalar = The scalar value to add to this vector.
+     * Returns: A reference to this vector.
+     */
+    public ref MY_TYPE add(V)(V scalar) @nogc if (isNumeric!V) {
+        static foreach (i; 0 .. size) data[i] += scalar;
+        return this;
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3i v = Vec3i(-2, 4, 3);
+        v.add(2);
+        assert(v.data == [0, 6, 5]);
     }
 
     /** 
@@ -198,11 +224,29 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v1 = Vec3i(1);
         Vec3i v2 = Vec3i(2);
         v1.sub(v2);
         assert(v1.data == [-1, -1, -1]);
         assert(v2.data == [2, 2, 2]);
+    }
+
+    /** 
+     * Subtracts the given scalar value from this vector.
+     * Params:
+     *   scalar = The scalar value to subtract from this vector.
+     * Returns: A reference to this vector.
+     */
+    public ref MY_TYPE sub(V)(V scalar) @nogc if (isNumeric!V) {
+        static foreach (i; 0 .. size) data[i] -= scalar;
+        return this;
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3i v = Vec3i(0, 3, -1);
+        v.sub(-2);
+        assert(v.data == [2, 5, 1]);
     }
 
     /** 
@@ -216,6 +260,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(2).mul(2).data == [4, 4]);
     }
 
@@ -230,6 +275,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(1, 2).mul(Vec2i(3, 2)).data == [3, 4]);
     }
 
@@ -244,6 +290,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(8).div(2).data == [4, 4]);
     }
 
@@ -258,6 +305,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(8).div(Vec2i(2, 4)).data == [4, 2]);
     }
 
@@ -271,6 +319,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return sum;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(2).mag2() == 8);
         assert(Vec2f(3f, 4f).mag2() == 5f * 5f);
     }
@@ -284,6 +333,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return sqrt(mag2());
     }
     unittest {
+        import dvec.vector_types;
         import std.math : sqrt;
         assert(Vec2i(1, 0).mag() == 1);
         assert(Vec2f(3f, 4f).mag() == 5f);
@@ -303,6 +353,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return sum;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec3i(1, 3, -5).dot(Vec3i(4, -2, -1)) == 3);
         assert(Vec2f(1.0f, 0.0f).dot(Vec2f(0.0f, 1.0f)) == 0f);
         assert(Vec2f(1.0f, 0.0f).dot(Vec2f(1.0f, 0.0f)) == 1f);
@@ -321,6 +372,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return result;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(1) + Vec2i(3) == Vec2i(4));
     }
 
@@ -333,10 +385,11 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      */
     public MY_TYPE opBinary(string op : "+", V)(V scalar) const @nogc if (isNumeric!V) {
         auto result = copy();
-        result.add(Vec!(V, size)(scalar));
+        result.add(scalar);
         return result;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(1) + 3 == Vec2i(4));
     }
 
@@ -351,6 +404,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v = Vec3i(1, 2, 3);
         v += Vec3i(1);
         assert(v.data == [2, 3, 4]);
@@ -367,6 +421,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v = Vec3i(1, 2, 3);
         v += 2;
         assert(v.data == [3, 4, 5]);
@@ -376,7 +431,6 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     // sub
     // mul
     // div
-    // and non-operator overload methods for add, sub
 
     /** 
      * Subtracts two vectors.
@@ -390,7 +444,25 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return result;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2i(4) - Vec2i(1) == Vec2i(3));
+    }
+
+    /** 
+     * Subtracts a scalar value from a vector.
+     * Params:
+     *   scalar = The scalar value to subtract.
+     * Returns: The vector resulting from subtracting the scalar value from
+     * all elements of the vector.
+     */
+    public MY_TYPE opBinary(string op : "-", V)(V scalar) const @nogc if (isNumeric!V) {
+        auto result = copy();
+        result.sub(scalar);
+        return result;
+    }
+    unittest {
+        import dvec.vector_types;
+        assert(Vec2i(2) - 3 == Vec2i(-1));
     }
 
     /** 
@@ -404,6 +476,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v = Vec3i(1, 2, 3);
         v -= Vec3i(2);
         assert(v.data == [-1, 0, 1]);
@@ -421,6 +494,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return result;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2f(0.5f) * 2f == Vec2f(1.0f));
     }
 
@@ -435,6 +509,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec2f v = Vec2f(2f);
         v *= 2f;
         assert(v.data == [4f, 4f]);
@@ -452,6 +527,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return result;
     }
     unittest {
+        import dvec.vector_types;
         assert(Vec2f(8f) / 4f == Vec2f(2f));
     }
 
@@ -466,6 +542,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return this;
     }
     unittest {
+        import dvec.vector_types;
         Vec2f v = Vec2f(2f, 4f);
         v /= 4f;
         assert(v.data == [0.5f, 1f]);
@@ -486,6 +563,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         return 1;
     }
     unittest {
+        import dvec.vector_types;
         Vec3i v1 = Vec3i(1);
         Vec3i v2 = Vec3i(2);
         Vec3i v3 = Vec3i(3);
@@ -591,6 +669,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
 unittest {
     import std.stdio;
     import std.math;
+    import dvec.vector_types;
 
     void assertFP(double actual, double expected, double delta = 1e-06, string msg = "Assertion failed.") {
         double lowBound = expected - delta;
