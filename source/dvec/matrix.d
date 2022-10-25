@@ -337,7 +337,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   cols = The set of columns to remove.
      * Returns: A matrix with the given rows and columns removed.
      */
-    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols) const
+    public Mat!(T, rowCount - n, colCount - m) subMatrix(size_t n, size_t m)(size_t[n] rows, size_t[m] cols) const @nogc
         if (rowCount - n > 0 && colCount - m > 0) {
         // TODO: Improve efficiency with static stuff.
         Mat!(T, rowCount - n, colCount - m) sub;
@@ -365,6 +365,18 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
             }
         }
         return sub;
+    }
+    unittest {
+        import dvec.matrix_types;
+        Mat3i m1 = Mat3i([
+            1, 2, 3,
+            4, 5, 6,
+            7, 8, 9
+        ]);
+        assert(m1.subMatrix([0], [0]) == Mat2i(5, 6, 8, 9));
+        assert(m1.subMatrix([0], [1]) == Mat2i(4, 6, 7, 9));
+        assert(m1.subMatrix([0], [2]) == Mat2i(4, 5, 7, 8));
+        assert(m1.subMatrix([1], [1]) == Mat2i(1, 3, 7, 9));
     }
 
     /** 

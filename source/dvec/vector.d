@@ -24,9 +24,10 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
 
     /** 
      * Internal alias to make template methods more readable. We can just say
-     * `MY_TYPE` instead of `Vec!(T, size)` everywhere.
+     * `MY_TYPE` instead of `Vec!(T, size)` everywhere. Marked as public so
+     * that it's included in documentation.
      */
-    private alias MY_TYPE = Vec!(T, size);
+    public alias MY_TYPE = Vec!(T, size);
 
     /** 
      * Constructs a vector from an array of elements.
@@ -413,7 +414,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         import dvec.vector_types;
         assert(Vec2i(2) + Vec2i(1) == Vec2i(3));
         assert(Vec2d(0.5, 0.25) + Vec2i(-1, 2) == Vec2d(-0.5, 2.25));
-        // TODO: Add more tests.
+        assert(Vec2i(1, 2) * Vec2i(3, 4) == Vec2i(3, 8));
+        assert(Vec2d(0.5, 0.25) / Vec2d(0.25, 0.1) == Vec2d(2.0, 2.5));
     }
 
     /** 
@@ -476,11 +478,28 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         Vec3i v1 = Vec3i(1);
         Vec3i v2 = Vec3i(2);
         Vec3i v3 = Vec3i(3);
-        assert(v1 == v1);
-        assert(v1 != v2);
         assert(v1 < v2);
         assert(v2 > v1);
         assert(v3 > v2);
+    }
+
+    /** 
+     * Determines if two vectors are equal. Vectors are considered equal when
+     * all of their components are equal.
+     * Params:
+     *   other = The vector to check equality against.
+     * Returns: True if the vectors are equal, or false otherwise.
+     */
+    public bool opEquals(MY_TYPE other) const @nogc {
+        return this.data == other.data;
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3f v1 = Vec3f(0.5f, 1.0f, 1.5f);
+        assert(v1 == v1);
+        Vec3f v2 = Vec3f(1f, 2f, 3f);
+        assert(v2 != v1);
+        assert(v1 == v2 / 2f);
     }
 
     /** 
