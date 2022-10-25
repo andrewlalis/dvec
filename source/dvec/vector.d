@@ -360,192 +360,105 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
         assert(Vec2f(1.0f, 0.0f).dot(Vec2f(-1.0f, 0.0f)) == -1f);
     }
 
+    // /--------------------\
+    // | OPERATOR OVERLOADS |
+    // \--------------------/
+
     /** 
-     * Adds two vectors.
-     * Params:
-     *   other = The other vector.
-     * Returns: A vector representing the sum of this and the other.
+     * Implements the basic unary operators on a vector. This supports:
+     * - Negation `-v`: Negates all a vector's components.
+     * - Incrementation `++v`: Increments all a vector's components by 1.
+     * - Decrementation `--v`: Decrements all a vector's components by 1.
+     * Returns: A new vector with the operation applied.
      */
-    public MY_TYPE opBinary(string op : "+", V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.add(other);
+    public MY_TYPE opUnary(string op)() const @nogc {
+        MY_TYPE result = copy();
+        static if (op == "-") {
+            result.mul(-1);
+        } else static if (op == "+") {
+            // Skip
+        } else static if (op == "++") {
+            result.add(1);
+        } else static if (op == "--") {
+            result.sub(1);
+        } else static assert(false, "Operator " ~ op ~ " is not implemented.");
         return result;
     }
     unittest {
         import dvec.vector_types;
-        assert(Vec2i(1) + Vec2i(3) == Vec2i(4));
+        assert(-Vec2i(3) == Vec2i(-3));
+        assert(+Vec2i(2) == Vec2i(2));
+        assert(++Vec3f(0.5f) == Vec3f(1.5f));
+        assert(--Vec3f(0.5f) == Vec3f(-0.5f));
     }
 
     /** 
-     * Adds a scalar value to a vector, element-wise.
+     * Implements the basic binary operators between two vectors. It supports
+     * element-wise addition, subtraction, multiplication, and division.
      * Params:
-     *   scalar = The scalar value to add to the vector.
-     * Returns: A vector representing the sum of this and the scalar value
-     * applied to all elements.
+     *   other = The other vector operand.
+     * Returns: A new vector that is the result of applying this vector and
+     * the other to the given operation.
      */
-    public MY_TYPE opBinary(string op : "+", V)(V scalar) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.add(scalar);
+    public MY_TYPE opBinary(string op, V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
+        MY_TYPE result = copy();
+        static if (op == "+") {
+            result.add(other);
+        } else static if (op == "-") {
+            result.sub(other);
+        } else static if (op == "*") {
+            result.mul(other);
+        } else static if (op == "/") {
+            result.div(other);
+        } else static assert(false, "Operator " ~ op ~ " is not implemented.");
         return result;
     }
     unittest {
         import dvec.vector_types;
-        assert(Vec2i(1) + 3 == Vec2i(4));
+        assert(Vec2i(2) + Vec2i(1) == Vec2i(3));
+        assert(Vec2d(0.5, 0.25) + Vec2i(-1, 2) == Vec2d(-0.5, 2.25));
+        // TODO: Add more tests.
     }
 
     /** 
-     * Adds a vector to this one.
+     * Implements the basic binary operators between a vector and a scalar
+     * value. It supports element-wise addition, subtraction multiplication,
+     * and division.
      * Params:
-     *   other = The other vector.
-     * Returns: A reference to this vector.
+     *   scalar = The scalar value to apply to each element of the vector.
+     * Returns: A new vector that is the result of applying the scalar value
+     * to this vector's elements, using the given operation.
      */
-    public ref MY_TYPE opOpAssign(string op : "+", V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
-        this.add(other);
-        return this;
-    }
-    unittest {
-        import dvec.vector_types;
-        Vec3i v = Vec3i(1, 2, 3);
-        v += Vec3i(1);
-        assert(v.data == [2, 3, 4]);
-    }
-
-    /** 
-     * Adds a scalar value to this vector.
-     * Params:
-     *   scalar = The scalar value to add to the vector.
-     * Returns: A reference to this vector.
-     */
-    public ref MY_TYPE opOpAssign(string op : "+", V)(V scalar) @nogc if (isNumeric!V) {
-        this.add(Vec!(V, size)(scalar));
-        return this;
-    }
-    unittest {
-        import dvec.vector_types;
-        Vec3i v = Vec3i(1, 2, 3);
-        v += 2;
-        assert(v.data == [3, 4, 5]);
-    }
-
-    // TODO: Add scalar operators for:
-    // sub
-    // mul
-    // div
-
-    /** 
-     * Subtracts two vectors.
-     * Params:
-     *   other = The other vector.
-     * Returns: A vector representing the difference of this and the other.
-     */
-    public MY_TYPE opBinary(string op : "-", V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.sub(other);
+    public MY_TYPE opBinary(string op, V)(V scalar) const @nogc if (isNumeric!V) {
+        MY_TYPE result = copy();
+        static if (op == "+") {
+            result.add(scalar);
+        } else static if (op == "-") {
+            result.sub(scalar);
+        } else static if (op == "*") {
+            result.mul(scalar);
+        } else static if (op == "/") {
+            result.div(scalar);
+        } else static assert(false, "Operator " ~ op ~ " not implemented.");
         return result;
     }
     unittest {
-        import dvec.vector_types;
-        assert(Vec2i(4) - Vec2i(1) == Vec2i(3));
+        // TODO
     }
 
     /** 
-     * Subtracts a scalar value from a vector.
+     * Right-hand binary operator implementation. See `opBinary` above for more info.
      * Params:
-     *   scalar = The scalar value to subtract.
-     * Returns: The vector resulting from subtracting the scalar value from
-     * all elements of the vector.
+     *   scalar = The scalar value to apply to each element of the vector.
+     * Returns: A new vector that is the result of applying the scalar value
+     * to this vector's elements, using the given operation.
      */
-    public MY_TYPE opBinary(string op : "-", V)(V scalar) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.sub(scalar);
-        return result;
+    public MY_TYPE opBinaryRight(string op, V)(V scalar) const @nogc if (isNumeric!V) {
+        return opBinary!(op, V)(scalar);
     }
     unittest {
         import dvec.vector_types;
-        assert(Vec2i(2) - 3 == Vec2i(-1));
-    }
-
-    /** 
-     * Subtracts a vector from this one.
-     * Params:
-     *   other = The other vector.
-     * Returns: A reference to this vector.
-     */
-    public ref MY_TYPE opOpAssign(string op : "-", V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
-        this.sub(other);
-        return this;
-    }
-    unittest {
-        import dvec.vector_types;
-        Vec3i v = Vec3i(1, 2, 3);
-        v -= Vec3i(2);
-        assert(v.data == [-1, 0, 1]);
-    }
-
-    /** 
-     * Multiplies a vector by a factor.
-     * Params:
-     *   factor = The factor to multiply by.
-     * Returns: The resultant vector.
-     */
-    public MY_TYPE opBinary(string op : "*", V)(V factor) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.mul(factor);
-        return result;
-    }
-    unittest {
-        import dvec.vector_types;
-        assert(Vec2f(0.5f) * 2f == Vec2f(1.0f));
-    }
-
-    /** 
-     * Multiplies this vector by a factor.
-     * Params:
-     *   factor = The factor to multiply by.
-     * Returns: A reference to this vector.
-     */
-    public ref MY_TYPE opOpAssign(string op : "*", V)(V factor) @nogc if (isNumeric!V) {
-        this.mul(factor);
-        return this;
-    }
-    unittest {
-        import dvec.vector_types;
-        Vec2f v = Vec2f(2f);
-        v *= 2f;
-        assert(v.data == [4f, 4f]);
-    }
-
-    /** 
-     * Divides a vector by a factor.
-     * Params:
-     *   factor = The factor to divide by.
-     * Returns: The resultant vector.
-     */
-    public MY_TYPE opBinary(string op : "/", V)(V factor) const @nogc if (isNumeric!V) {
-        auto result = copy();
-        result.div(factor);
-        return result;
-    }
-    unittest {
-        import dvec.vector_types;
-        assert(Vec2f(8f) / 4f == Vec2f(2f));
-    }
-
-    /** 
-     * Divides this vector by a factor.
-     * Params:
-     *   factor = The factor to divide by.
-     * Returns: A reference to this vector.
-     */
-    public ref MY_TYPE opOpAssign(string op : "/", V)(V factor) @nogc if (isNumeric!V) {
-        this.div(factor);
-        return this;
-    }
-    unittest {
-        import dvec.vector_types;
-        Vec2f v = Vec2f(2f, 4f);
-        v /= 4f;
-        assert(v.data == [0.5f, 1f]);
+        assert(3 + Vec2i(1) == Vec2i(4));
     }
 
     /** 
