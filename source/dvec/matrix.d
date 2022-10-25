@@ -29,6 +29,13 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
     public T[rowCount * colCount] data;
 
     /** 
+     * Internal alias for this Matrix' own type, so we don't have to use the
+     * verbose template syntax everywhere. Marked as public so that it shows up
+     * in documentation.
+     */
+    public alias MY_TYPE = Mat!(T, rowCount, colCount);
+
+    /** 
      * Constructs a matrix from the given elements.
      * Params:
      *   elements = The elements to place in the matrix. Should be in row-major
@@ -132,7 +139,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   vector = The elements to set in the row.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) setRow(size_t row, Vec!(T, colCount) vector) {
+    public ref MY_TYPE setRow(size_t row, Vec!(T, colCount) vector) {
         size_t idx = convertToIndex(row, 0);
         data[idx .. idx + colCount] = vector.data;
         return this;
@@ -159,7 +166,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   vector = The elements to set in the column.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) setCol(size_t col, Vec!(T, rowCount) vector) {
+    public ref MY_TYPE setCol(size_t col, Vec!(T, rowCount) vector) {
         static foreach (i; 0 .. rowCount) {
             this[i, col] = vector[i];
         }
@@ -172,7 +179,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   elements = The elements to set.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) setData(T[rowCount * colCount] elements) {
+    public ref MY_TYPE setData(T[rowCount * colCount] elements) {
         data[0 .. $] = elements[0 .. $];
         return this;
     }
@@ -181,7 +188,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      * Gets a copy of this matrix.
      * Returns: A copy of this matrix.
      */
-    public Mat!(T, rowCount, colCount) copy() const {
+    public MY_TYPE copy() const {
         return Mat!(T, rowCount, colCount)(this);
     }
 
@@ -191,7 +198,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   other = The other matrix to add to this one.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) add(Mat!(T, rowCount, colCount) other) {
+    public ref MY_TYPE add(Mat!(T, rowCount, colCount) other) {
         static foreach (i; 0 .. data.length) data[i] += other.data[i];
         return this;
     }
@@ -202,7 +209,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   other = The other matrix to subtract from this one.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) sub(Mat!(T, rowCount, colCount) other) {
+    public ref MY_TYPE sub(Mat!(T, rowCount, colCount) other) {
         static foreach (i; 0 .. data.length) data[i] -= other.data[i];
         return this;
     }
@@ -213,7 +220,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   factor = The factor to muliply by.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) mul(T factor) {
+    public ref MY_TYPE mul(T factor) {
         static foreach (i; 0 .. data.length) data[i] *= factor;
         return this;
     }
@@ -224,7 +231,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   factor = The factor to divide by.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) div(T factor) {
+    public ref MY_TYPE div(T factor) {
         static foreach (i; 0 .. data.length) data[i] /= factor;
         return this;
     }
@@ -234,7 +241,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      * matrix, and stores it in this matrix.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) transpose() {
+    public ref MY_TYPE transpose() {
         Mat!(T, colCount, rowCount) m;
         static foreach (i; 0 .. rowCount) {
             static foreach (j; 0 .. colCount) {
@@ -293,7 +300,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   rowJ = A row to swap, starting from 0.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) rowSwitch(size_t rowI, size_t rowJ) {
+    public ref MY_TYPE rowSwitch(size_t rowI, size_t rowJ) {
         auto r = getRow(rowI);
         setRow(rowI, getRow(rowJ));
         setRow(rowJ, r);
@@ -307,7 +314,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   factor = The factor to multiply by.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) rowMultiply(size_t row, T factor) {
+    public ref MY_TYPE rowMultiply(size_t row, T factor) {
         size_t idx = convertToIndex(row, 0);
         static foreach (i; 0 .. colCount) {
             data[idx + i] *= factor;
@@ -323,7 +330,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
      *   rowJ = The row to add to `rowI`.
      * Returns: A reference to this matrix, for method chaining.
      */
-    public ref Mat!(T, rowCount, colCount) rowAdd(size_t rowI, T factor, size_t rowJ) {
+    public ref MY_TYPE rowAdd(size_t rowI, T factor, size_t rowJ) {
         auto row = getRow(rowJ);
         row.mul(factor);
         setRow(rowI, row);
@@ -420,8 +427,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
          * Gets an [identity matrix](https://en.wikipedia.org/wiki/Identity_matrix).
          * Returns: An identity matrix.
          */
-        public static Mat!(T, N, N) identity() {
-            Mat!(T, N, N) m;
+        public static MY_TYPE identity() {
+            MY_TYPE m;
             static foreach (i; 0 .. N) {
                 static foreach (j; 0 .. N) {
                     m[i, j] = i == j ? 1 : 0;
@@ -463,9 +470,9 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
          * Gets a [cofactor matrix](https://en.wikipedia.org/wiki/Minor_(linear_algebra)#Cofactor_expansion_of_the_determinant).
          * Returns: A reference to this matrix, for method chaining.
          */
-        public ref Mat!(T, N, N) cofactor() {
+        public ref MY_TYPE cofactor() {
             static if (N > 1) {
-                Mat!(T, N, N) c;
+                MY_TYPE c;
                 static foreach (i; 0 .. N) {
                     static foreach (j; 0 .. N) {
                         c[i, j] = ((i + j) % 2 == 0 ? 1 : -1) * this.subMatrix([i], [j]).det();
@@ -480,7 +487,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
          * Gets an [adjugate matrix](https://en.wikipedia.org/wiki/Adjugate_matrix).
          * Returns: A reference to this matrix, for method chaining.
          */
-        public ref Mat!(T, N, N) adjugate() {
+        public ref MY_TYPE adjugate() {
             cofactor();
             transpose();
             return this;
@@ -490,7 +497,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
          * Gets the inverse of this matrix.
          * Returns: A reference to this matrix, for method chaining.
          */
-        public ref Mat!(T, N, N) inv() {
+        public ref MY_TYPE inv() {
             T d = det();
             adjugate();
             div(d);
@@ -505,9 +512,9 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   theta = The angle in radians.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) rotate(T theta) {
+            public ref MY_TYPE rotate(T theta) {
                 import std.math : cos, sin;
-                this = mul(Mat!(T, N, N)(
+                this = mul(MY_TYPE(
                     cos(theta), -sin(theta), 0,
                     sin(theta), cos(theta),  0,
                     0,          0,           1
@@ -522,8 +529,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   dy = The translation on the y-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) translate(T dx, T dy) {
-                this = mul(Mat!(T, N, N)(
+            public ref MY_TYPE translate(T dx, T dy) {
+                this = mul(MY_TYPE(
                     1, 0, dx,
                     0, 1, dy,
                     0, 0, 1
@@ -538,8 +545,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   sy = The scale factor on the y-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) scale(T sx, T sy) {
-                this = mul(Mat!(T, N, N)(
+            public ref MY_TYPE scale(T sx, T sy) {
+                this = mul(MY_TYPE(
                     sx, 0,  0,
                     0,  sy, 0,
                     0,  0,  1
@@ -553,7 +560,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   s = The scale factor to apply.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) scale(T s) {
+            public ref MY_TYPE scale(T s) {
                 return scale(s, s);
             }
 
@@ -564,8 +571,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   sy = The shear factor on the y-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) shear(T sx, T sy) {
-                this = mul(Mat!(T, N, N)(
+            public ref MY_TYPE shear(T sx, T sy) {
+                this = mul(MY_TYPE(
                     1,  sx, 0,
                     sy, 1,  0,
                     0,  0,  1
@@ -595,8 +602,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   dz = The translation on the z-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) translate(T dx, T dy, T dz) {
-                this = mul(Mat!(T, N, N)(
+            public ref MY_TYPE translate(T dx, T dy, T dz) {
+                this = mul(MY_TYPE(
                     1, 0, 0, dx,
                     0, 1, 0, dy,
                     0, 0, 1, dz,
@@ -613,8 +620,8 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   sz = The scale factor on the z-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) scale(T sx, T sy, T sz) {
-                this = mul(Mat!(T, N, N)(
+            public ref MY_TYPE scale(T sx, T sy, T sz) {
+                this = mul(MY_TYPE(
                     sx, 0,  0,  0,
                     0,  sy, 0,  0,
                     0,  0,  sz, 0,
@@ -629,7 +636,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   s = The scale factor to apply.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) scale(T s) {
+            public ref MY_TYPE scale(T s) {
                 return scale(s, s, s);
             }
 
@@ -639,9 +646,9 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   theta = The angle in radians.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) rotateX(T theta) {
+            public ref MY_TYPE rotateX(T theta) {
                 import std.math : cos, sin;
-                this = mul(Mat!(T, N, N)(
+                this = mul(MY_TYPE(
                     1, 0,          0,           0,
                     0, cos(theta), -sin(theta), 0,
                     0, sin(theta), cos(theta),  0,
@@ -656,9 +663,9 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   theta = The angle in radians.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) rotateY(T theta) {
+            public ref MY_TYPE rotateY(T theta) {
                 import std.math : cos, sin;
-                this = mul(Mat!(T, N, N)(
+                this = mul(MY_TYPE(
                     cos(theta),  0, sin(theta), 0,
                     0,           1, 0,          0,
                     -sin(theta), 0, cos(theta), 0,
@@ -673,9 +680,9 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   theta = The angle in radians.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) rotateZ(T theta) {
+            public ref MY_TYPE rotateZ(T theta) {
                 import std.math : cos, sin;
-                this = mul(Mat!(T, N, N)(
+                this = mul(MY_TYPE(
                     cos(theta), -sin(theta), 0, 0,
                     sin(theta), cos(theta),  0, 0,
                     0,          0,           1, 0,
@@ -693,7 +700,7 @@ struct Mat(T, size_t rowCount, size_t colCount) if (isNumeric!T && rowCount > 0 
              *   z = The angle to rotate about the z-axis.
              * Returns: A reference to this matrix, for method chaining.
              */
-            public ref Mat!(T, N, N) rotate(T x, T y, T z) {
+            public ref MY_TYPE rotate(T x, T y, T z) {
                 rotateX(x);
                 rotateY(y);
                 rotateZ(z);
