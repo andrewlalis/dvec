@@ -18,6 +18,19 @@ Vec3f v = Vec3f(1f, 2f, 3f) * 5 - Vec3f(0.5f);
 **Besides the `toString()` methods**, no parts of this library make use of the GC, and are thus `@nogc` compatible.
 
 ### Vectors
+Vectors are simply a fixed-size list of numerical elements, which implement a lot of mathematical operations that are useful in linear algebra.
+
+The values of a vector can be accessed in the following ways:
+- By index: `v[1]` gets the second element in vector `v`.
+- By name: `v.x, v.y, v.z, v.w` gets the first, second, third, or fourth element of a vector, respectively.
+- By the internal data: `v.data` gets the internal array.
+
+#### Casting
+You can cast vectors of different types and sizes using D's standard `cast(type)` syntax. Note that the individual elements are casted using `cast` as well, and that may result in data loss if you, for example, cast from a floating-point to integer vector. If you cast to a vector with a different size, the following rules apply:
+- If the new vector type is smaller, extra elements are truncated.
+- If the new vector type is larger, any missing elements are initialized to zero.
+
+#### Specialization
 Certain vector types get access to extra special functions:
 
 - Any floating-point (float, double) vector supports the `norm()` method, to normalize the vector to a unit vector of length 1.
