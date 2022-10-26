@@ -23,13 +23,6 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     public T[size] data;
 
     /** 
-     * Internal alias to make template methods more readable. We can just say
-     * `MY_TYPE` instead of `Vec!(T, size)` everywhere. Marked as public so
-     * that it's included in documentation.
-     */
-    public alias MY_TYPE = Vec!(T, size);
-
-    /** 
      * Constructs a vector from an array of elements.
      * Params:
      *   elements = The elements to put in the vector.
@@ -81,7 +74,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Params:
      *   other = The vector to copy.
      */
-    public this(MY_TYPE other) @nogc {
+    public this(Vec!(T, size) other) @nogc {
         this(other.data);
     }
     unittest {
@@ -95,8 +88,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Constructs a vector containing all 0's.
      * Returns: An vector containing all 0's.
      */
-    public static MY_TYPE empty() @nogc {
-        MY_TYPE v;
+    public static Vec!(T, size) empty() @nogc {
+        Vec!(T, size) v;
         static foreach (i; 0 .. size) v[i] = 0;
         return v;
     }
@@ -112,8 +105,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   vectors = The list of vectors to compute the sum of.
      * Returns: The sum of all vectors.
      */
-    public static MY_TYPE sum(MY_TYPE[] vectors) @nogc {
-        MY_TYPE v = MY_TYPE(0);
+    public static Vec!(T, size) sum(Vec!(T, size)[] vectors) @nogc {
+        Vec!(T, size) v = Vec!(T, size)(0);
         foreach (vector; vectors) v.add(vector);
         return v;
     }
@@ -132,8 +125,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Gets a copy of this vector.
      * Returns: A copy of this vector.
      */
-    public MY_TYPE copy() const @nogc {
-        return MY_TYPE(this);
+    public Vec!(T, size) copy() const @nogc {
+        return Vec!(T, size)(this);
     }
     unittest {
         import dvec.vector_types;
@@ -145,37 +138,36 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
     }
 
     /** 
-     * Gets the element at a specified index.
+     * Sets all elements of the vector to those in the specified array.
      * Params:
-     *   i = The index of the element.
-     * Returns: The element at the specified index.
+     *   elements = The elements to set.
+     * Returns: A reference to this vector.
      */
-    public T opIndex(size_t i) const @nogc {
-        return data[i];
+    public ref Vec!(T, size) set(T[size] elements) @nogc {
+        static foreach (i; 0 .. size) data[i] = elements[i];
+        return this;
     }
     unittest {
         import dvec.vector_types;
-        Vec3f v = Vec3f(1f, 2f, 3f);
-        assert(v[0] == 1f);
-        assert(v[1] == 2f);
-        assert(v[2] == 3f);
+        assert(Vec2i(1, 2).set([3, 4]).data == [3, 4]);
     }
 
     /** 
-     * Inserts an element at the specified index.
-     * Params:
-     *   value = The value to assign.
-     *   i = The index of the element.
+     * Sets all the elements of the vector to those in the specified variadic
+     * array. Note that if the given list of elements is shorter than the
+     * vector's size, only the first `elements.length` elements will be set,
+     * and if the list of elements is larger than the vector's size, any extra
+     * elements will be ignored.
+     * Returns: A reference to this vector.
      */
-    public void opIndexAssign(T value, size_t i) @nogc {
-        data[i] = value;
+    public ref Vec!(T, size) set(T[] elements...) @nogc {
+        import std.algorithm : min;
+        foreach (i; 0 .. min(size, elements.length)) data[i] = elements[i];
+        return this;
     }
     unittest {
         import dvec.vector_types;
-        Vec3i v;
-        assert(v[0] == 0);
-        v[0] = 42;
-        assert(v[0] == 42);
+        assert(Vec2i(1, 2).set(3, 4).data == [3, 4]);
     }
 
     /** 
@@ -184,7 +176,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to add to this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE add(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) add(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += other[i];
         return this;
     }
@@ -203,7 +195,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   scalar = The scalar value to add to this vector.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE add(V)(V scalar) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) add(V)(V scalar) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] += scalar;
         return this;
     }
@@ -220,7 +212,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to subtract from this one.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE sub(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) sub(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= other[i];
         return this;
     }
@@ -239,7 +231,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   scalar = The scalar value to subtract from this vector.
      * Returns: A reference to this vector.
      */
-    public ref MY_TYPE sub(V)(V scalar) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) sub(V)(V scalar) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] -= scalar;
         return this;
     }
@@ -256,7 +248,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to multiply by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE mul(V)(V factor) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) mul(V)(V factor) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= factor;
         return this;
     }
@@ -271,7 +263,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector to multiply with.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE mul(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) mul(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] *= other[i];
         return this;
     }
@@ -286,7 +278,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   factor = The factor to divide by.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE div(V)(V factor) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) div(V)(V factor) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= factor;
         return this;
     }
@@ -301,7 +293,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector to divide with.
      * Returns: A reference to this vector, for method chaining.
      */
-    public ref MY_TYPE div(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
+    public ref Vec!(T, size) div(V)(Vec!(V, size) other) @nogc if (isNumeric!V) {
         static foreach (i; 0 .. size) data[i] /= other[i];
         return this;
     }
@@ -348,7 +340,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The other vector.
      * Returns: The dot product of the vectors.
      */
-    public T dot(MY_TYPE other) const @nogc {
+    public T dot(Vec!(T, size) other) const @nogc {
         T sum = 0;
         static foreach (i; 0 .. size) sum += data[i] * other[i];
         return sum;
@@ -368,8 +360,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * - Decrementation `--v`: Decrements all a vector's components by 1.
      * Returns: A new vector with the operation applied.
      */
-    public MY_TYPE opUnary(string op)() const @nogc {
-        MY_TYPE result = copy();
+    public Vec!(T, size) opUnary(string op)() const @nogc {
+        Vec!(T, size) result = copy();
         static if (op == "-") {
             result.mul(-1);
         } else static if (op == "+") {
@@ -397,8 +389,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: A new vector that is the result of applying this vector and
      * the other to the given operation.
      */
-    public MY_TYPE opBinary(string op, V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
-        MY_TYPE result = copy();
+    public Vec!(T, size) opBinary(string op, V)(Vec!(V, size) other) const @nogc if (isNumeric!V) {
+        Vec!(T, size) result = copy();
         static if (op == "+") {
             result.add(other);
         } else static if (op == "-") {
@@ -427,8 +419,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: A new vector that is the result of applying the scalar value
      * to this vector's elements, using the given operation.
      */
-    public MY_TYPE opBinary(string op, V)(V scalar) const @nogc if (isNumeric!V) {
-        MY_TYPE result = copy();
+    public Vec!(T, size) opBinary(string op, V)(V scalar) const @nogc if (isNumeric!V) {
+        Vec!(T, size) result = copy();
         static if (op == "+") {
             result.add(scalar);
         } else static if (op == "-") {
@@ -451,12 +443,177 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: A new vector that is the result of applying the scalar value
      * to this vector's elements, using the given operation.
      */
-    public MY_TYPE opBinaryRight(string op, V)(V scalar) const @nogc if (isNumeric!V) {
+    public Vec!(T, size) opBinaryRight(string op, V)(V scalar) const @nogc if (isNumeric!V) {
         return opBinary!(op, V)(scalar);
     }
     unittest {
         import dvec.vector_types;
         assert(3 + Vec2i(1) == Vec2i(4));
+        // TODO: add more tests.
+    }
+
+    /** 
+     * Gets the element at a specified index.
+     * Params:
+     *   i = The index of the element.
+     * Returns: The element at the specified index.
+     */
+    public T opIndex(size_t i) const @nogc {
+        return data[i];
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3f v = Vec3f(1f, 2f, 3f);
+        assert(v[0] == 1f);
+        assert(v[1] == 2f);
+        assert(v[2] == 3f);
+    }
+
+    /** 
+     * Inserts an element at the specified index.
+     * Params:
+     *   value = The value to assign.
+     *   i = The index of the element.
+     */
+    public void opIndexAssign(T value, size_t i) @nogc {
+        data[i] = value;
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3i v;
+        assert(v[0] == 0);
+        v[0] = 42;
+        assert(v[0] == 42);
+    }
+
+    /** 
+     * Implements op-assignments for indexed values of the vector, so you can
+     * do things like `v[2] *= 10;`. Supports addition, subtraction,
+     * multiplication, and division.
+     * Params:
+     *   value = The value to apply.
+     *   i = The index in the vector's array.
+     */
+    public void opIndexOpAssign(string op, V)(V value, size_t i) @nogc if (isNumeric!V) {
+        static if (op == "+") {
+            data[i] += value;
+        } else static if (op == "-") {
+            data[i] -= value;
+        } else static if (op == "*") {
+            data[i] *= value;
+        } else static if (op == "/") {
+            data[i] /= value;
+        } else static assert(false, "Operator " ~ op ~ " not implemented.");
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec3i v = Vec3i(1);
+        v[0] += 2;
+        assert(v[0] == 3);
+        v[1] -= 3;
+        assert(v[1] == -2);
+        v[0] *= 2;
+        assert(v[0] == 6);
+    }
+
+    /** 
+     * Named accessor for common vector fields, which allows you to get the
+     * value of specific elements in the vector according to conventional
+     * names.
+     * - `x` for the first element.
+     * - `y` for the second element.
+     * - `z` for the third element.
+     * - `w` for the fourth element.
+     * Returns: The value of the specified element.
+     */
+    public T opDispatch(string s)() const @nogc {
+        static if (s == "x" && size >= 1) {
+            return data[0];
+        } else static if (s == "y" && size >= 2) {
+            return data[1];
+        } else static if (s == "z" && size >= 3) {
+            return data[2];
+        } else static if (s == "w" && size >= 4) {
+            return data[3];
+        } else {
+            static assert(false, "Invalid vector named accessor: " ~ s);
+        }
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec4i v = Vec4i(1, 2, 3, 4);
+        assert(v.x == 1);
+        assert(v.y == 2);
+        assert(v.z == 3);
+        assert(v.w == 4);
+    }
+
+    /** 
+     * Named setter for common vector fields, which allows you to set the value
+     * of specific elements in the vector according to conventional names.
+     * - `x` for the first element.
+     * - `y` for the second element.
+     * - `z` for the third element.
+     * - `w` for the fourth element.
+     * Params:
+     *   value = The value to set. It can be any numeric value, but it'll be
+     *           cast to the vector's type.
+     */
+    public void opDispatch(string s, V)(V value) @nogc if (isNumeric!V) {
+        static if (s == "x" && size >= 1) {
+            data[0] = cast(T) value;
+        } else static if (s == "y" && size >= 2) {
+            data[1] = cast(T) value;
+        } else static if (s == "z" && size >= 3) {
+            data[2] = cast(T) value;
+        } else static if (s == "w" && size >= 4) {
+            data[3] = cast(T) value;
+        } else {
+            static assert(false, "Invalid vector named setter: " ~ s);
+        }
+        // TODO: Find some way to make `v.x += 1` work.
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec4i v;
+        v.x = 1;
+        v.y = 2;
+        v.z = 3;
+        v.w = 4;
+        assert(v.data == [1, 2, 3, 4]);
+    }
+
+    /** 
+     * Implements explicit casting between vector types. You may cast to a
+     * type with a different `T` element type, or a different size, or both.
+     * Casting to a different element type will call a normal `cast(newType) oldValue`
+     * for each value. When casting to a smaller vector size, extra elements
+     * will be truncated, and when casting to a larger size, missing elements
+     * are initialized to zero.
+     *
+     * Keep in mind that casting floating-point vectors to integer vectors is
+     * possible, and that casting in general can lead to a loss of data.
+     * 
+     * Returns: The resulting vector of the new type.
+     */
+    public NewVecType opCast(NewVecType : Vec!(newType, newSize), newType, size_t newSize)() const @nogc {
+        NewVecType v;
+        static foreach (i; 0 .. newSize) {
+            static if (i < size) {
+                v.data[i] = cast(newType) this.data[i];
+            } else {
+                v.data[i] = 0;
+            }
+        }
+        return v;
+    }
+    unittest {
+        import dvec.vector_types;
+        Vec2f v1 = Vec2f(0.5f, 3.1f);
+        Vec3i v2 = cast(Vec3i) v1;
+        assert(v2.data == [0, 3, 0]);
+        auto v3 = cast(Vec!(byte, 1)) v1;
+        assert(v3.data == [0]);
     }
 
     /** 
@@ -466,9 +623,9 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      * Returns: 0 if the vectors have equal magnitude, 1 if this vector's
      * magnitude is bigger, and -1 if the other's is bigger.
      */
-    public int opCmp(MY_TYPE other) const @nogc {
-        double a = this.mag2();
-        double b = other.mag2();
+    public int opCmp(Vec!(T, size) other) const @nogc {
+        const double a = this.mag2();
+        const double b = other.mag2();
         if (a == b) return 0;
         if (a < b) return -1;
         return 1;
@@ -490,7 +647,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
      *   other = The vector to check equality against.
      * Returns: True if the vectors are equal, or false otherwise.
      */
-    public bool opEquals(MY_TYPE other) const @nogc {
+    public bool opEquals(Vec!(T, size) other) const @nogc {
         return this.data == other.data;
     }
     unittest {
@@ -526,7 +683,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * such that it will have a magnitude of 1.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE norm() @nogc {
+        public ref Vec!(T, size) norm() @nogc {
             const double mag = mag();
             static foreach (i; 0 .. size) {
                 data[i] /= mag;
@@ -546,7 +703,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * - The angle is normalized to be within the range [0, 2*PI).
          * Returns: A reference to this vector.
          */
-        public ref MY_TYPE toPolar() @nogc {
+        public ref Vec!(T, size) toPolar() @nogc {
             import std.math : atan2, PI;
             T radius = mag();
             T angle = atan2(data[1], data[0]);
@@ -579,7 +736,7 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          * coordinate.
          * Returns: A reference to this vector.
          */
-        public ref MY_TYPE toCartesian() @nogc {
+        public ref Vec!(T, size) toCartesian() @nogc {
             import std.math : cos, sin;
             T x = data[0] * cos(data[1]);
             T y = data[0] * sin(data[1]);
@@ -597,8 +754,8 @@ struct Vec(T, size_t size) if (isNumeric!T && size > 0) {
          *   other = The other vector.
          * Returns: A reference to this vector, for method chaining.
          */
-        public ref MY_TYPE cross(MY_TYPE other) @nogc {
-            MY_TYPE tmp;
+        public ref Vec!(T, size) cross(Vec!(T, size) other) @nogc {
+            Vec!(T, size) tmp;
             tmp[0] = data[1] * other[2] - data[2] * other[1];
             tmp[1] = data[2] * other[0] - data[0] * other[2];
             tmp[2] = data[0] * other[1] - data[1] * other[0];
